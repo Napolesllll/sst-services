@@ -23,12 +23,13 @@
     }
   },
   "include": [
-    "next-env.d.ts",
+     "next-env.d.ts",
+    "next-auth.d.ts",  // ← Asegúrate que esto esté
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "prisma.config.js"  ],
   "exclude": ["node_modules"]
 }

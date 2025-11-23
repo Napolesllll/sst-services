@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum para roles de usuario
+enum UserRole {
+  CLIENTE
+  EMPLEADO
+  ADMINISTRADOR
+}
+
+// Enum para estados de servicio
+enum ServiceStatus {
+  PENDING      // En espera de asignación
+  ASSIGNED     // Asignado a empleado
+  IN_PROGRESS  // En progreso
+  COMPLETED    // Finalizado
+  CANCELLED    // Cancelado
+  POSTPONED    // Aplazado
+  REOPENED     // Reabierto
+}
+
+// Enum para tipos de servicio
+enum ServiceType {
+  PROFESIONAL_SST
+  TECNOLOGO_SST
+  TECNICO_SST
+  COORDINADOR_ALTURAS
+  SUPERVISOR_ESPACIOS_CONFINADOS
+  CAPACITACIONES_CURSOS
+  ALQUILER_EQUIPOS
+  ANDAMIERO
+  AUDITORIA_SG_SST
+  RESCATISTA
+  TAPH_PARAMEDICO
+  AUXILIAR_OPERATIVO
+  SERVICIOS_ADMINISTRATIVOS
+  NOMINA
+  FACTURACION
+  CONTRATOS
+  SEGURIDAD_SOCIAL
+  OTRO
+}
+
+// Enum para tipos de documento
+enum DocumentType {
+  CHARLA_SEGURIDAD
+  ATS
+  PERMISO_TRABAJO
+  PERMISO_ALTURAS
+  PERMISO_ESPACIOS_CONFINADOS
+  PERMISO_TRABAJO_CALIENTE
+  PERMISO_ENERGIAS_PELIGROSAS
+  PERMISO_OTRO
+}
+
+// Enum para tipos de inspección
+enum InspectionType {
+  ARNES
+  ESLINGA
+  ESCALERA
+  ANDAMIO
+  HERRAMIENTA_TALADRO
+  HERRAMIENTA_PULIDORA
+  MEDICION_GASES
+  TRIPODE
+  LINEA_VIDA
+  VENTILACION
+  EQUIPO_RESCATE
+  CARGA_DOCUMENTOS
+  VALIDACION_SOPORTES
+  FIRMA_DIGITAL
+  CHECKLIST_CUMPLIMIENTO
+  OTRO
+}
+
+// Modelo de Usuario
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  phone         String?
+  role          UserRole
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relaciones
+  servicesRequested Service[] @relation("ClientServices")
+  servicesAssigned  Service[] @relation("EmployeeServices")
+  createdServices   Service[] @relation("CreatedByAdmin")
+  notifications     Notification[]
+  
+  @@index([email])
+  @@index([role])
+}
+
+// Modelo de Servicio
+model Service {
+  id                String        @id @default(cuid())
+  serviceType       ServiceType
+  status            ServiceStatus @default(PENDING)
+  description       String        @db.Text
+  address           String
+  contactPerson     String
+  contactPhone      String
+  suggestedDate     DateTime
+  startDate         DateTime?
+  endDate           DateTime?
+  observations      String?       @db.Text
+  
+  // Relaciones con usuarios
+  clientId          String
+  client            User          @relation("ClientServices", fields: [clientId], references: [id])
+  
+  employeeId        String?
+  employee          User?         @relation("EmployeeServices", fields: [employeeId], references: [id])
+  
+  createdById       String
+  createdBy         User          @relation("CreatedByAdmin", fields: [createdById], references: [id])
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  completedAt       DateTime?
+  
+  // Relaciones con otros modelos
+  documents         ServiceDocument[]
+  inspections       ServiceInspection[]
+  evidences         Evidence[]
+  assignments       ServiceAssignment[]
+  
+  @@index([clientId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([serviceType])
+  @@index([suggestedDate])
+}
+
+// Asignación de empleados a servicios (permite múltiples empleados)
+model ServiceAssignment {
+  id          String   @id @default(cuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  employeeId  String
+  assignedAt  DateTime @default(now())
+  
+  @@unique([serviceId, employeeId])
+  @@index([serviceId])
+  @@index([employeeId])
+}
+
+// Documentos de servicio
+model ServiceDocument {
+  id            String       @id @default(cuid())
+  serviceId     String
+  service       Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  documentType  DocumentType
+  content       Json         // Contenido del formulario en JSON
+  fileUrl       String?      // URL del PDF generado
+  completedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  @@index([serviceId])
+  @@index([documentType])
+}
+
+// Inspecciones preoperacionales
+model ServiceInspection {
+  id              String         @id @default(cuid())
+  serviceId       String
+  service         Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  inspectionType  InspectionType
+  data            Json           // Datos del checklist en JSON
+  passed          Boolean        @default(false)
+  observations    String?        @db.Text
+  completedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  @@index([serviceId])
+  @@index([inspectionType])
+}
+
+// Evidencias (fotos, firmas, ubicación)
+model Evidence {
+  id          String   @id @default(cuid())
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  type        String   // 'photo', 'signature', 'location', 'document'
+  fileUrl     String?
+  data        Json?    // Datos adicionales (coordenadas GPS, etc.)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  
+  @@index([serviceId])
+  @@index([type])
+}
+
+// Notificaciones
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  type      String   // 'service_assigned', 'service_completed', 'reminder', etc.
+  data      Json?    // Datos adicionales
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+// Configuración de tipos de servicio y documentos obligatorios
+model ServiceConfiguration {
+  id               String       @id @default(cuid())
+  serviceType      ServiceType  @unique
+  requiredDocs     DocumentType[]
+  requiredInspections InspectionType[]
+  description      String?      @db.Text
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  
+  @@index([serviceType])
+}
+
+// Registro de actividades (auditoría)
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // 'created_service', 'assigned_service', 'completed_inspection', etc.
+  entity      String   // 'service', 'user', 'document', etc.
+  entityId    String
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
