@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import CharlaSeguridadModal from "./CharlaSeguridadModal";
 
 interface Document {
   id: string;
@@ -105,8 +107,10 @@ export default function ServiceDocuments({
   status,
   documents,
 }: ServiceDocumentsProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [showCharlModal, setShowCharlModal] = useState(false);
 
   const requiredDocuments = getRequiredDocuments(serviceType);
 
@@ -117,8 +121,23 @@ export default function ServiceDocuments({
 
   const handleCreateDocument = async (documentType: string) => {
     setSelectedDocument(documentType);
-    // Aquí abrirías un modal o navegarías a un formulario
-    alert(`Crear documento: ${documentConfig[documentType].label}`);
+
+    // Abrir modal según el tipo de documento
+    if (documentType === "CHARLA_SEGURIDAD") {
+      setShowCharlModal(true);
+    } else {
+      // Por ahora, alert para otros documentos
+      alert(
+        `Crear documento: ${documentConfig[documentType].label} - Próximamente`
+      );
+    }
+  };
+
+  const handleDocumentSuccess = () => {
+    setShowCharlModal(false);
+    setSelectedDocument(null);
+    // Recargar la página para mostrar el documento completado
+    router.refresh();
   };
 
   if (requiredDocuments.length === 0) {
@@ -351,6 +370,15 @@ export default function ServiceDocuments({
           </div>
         </div>
       </div>
+
+      {/* Modal de Charla de Seguridad */}
+      {showCharlModal && (
+        <CharlaSeguridadModal
+          serviceId={serviceId}
+          onClose={() => setShowCharlModal(false)}
+          onSuccess={handleDocumentSuccess}
+        />
+      )}
     </motion.div>
   );
 }
