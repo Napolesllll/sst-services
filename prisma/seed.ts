@@ -1,3 +1,5 @@
+//para ejecutar : npx tsx prisma/seed.ts
+
 import { PrismaClient, ServiceType, DocumentType, InspectionType } from '@prisma/client'
 import { hash } from 'bcryptjs'
 
@@ -34,6 +36,21 @@ async function main() {
             role: 'EMPLEADO',
             active: true,
         },
+    })
+
+    // Employee 2
+    const employee2 = await prisma.user.upsert({
+        where: { email: 'empleado2@sst.com' },
+        update: {},
+        create: {
+            email: 'empleado2@sst.com',
+            password: hashedPassword,
+            name: 'Luis Trabajador2',
+            phone: '+57 300 222 2222',
+            role: 'EMPLEADO',
+            active: true,
+        },
+
     })
 
     // Client
