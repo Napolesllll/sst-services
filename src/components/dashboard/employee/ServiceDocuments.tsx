@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import CharlaSeguridadModal from "./CharlaSeguridadModal";
 import ATSModal from "./ATSModal";
+import PermisoAlturasModal from "./PermisoAlturasModal";
 
 interface Document {
   id: string;
@@ -113,6 +114,7 @@ export default function ServiceDocuments({
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [showCharlModal, setShowCharlModal] = useState(false);
   const [showATSModal, setShowATSModal] = useState(false);
+  const [showPermisoAlturasModal, setShowPermisoAlturasModal] = useState(false);
 
   const requiredDocuments = getRequiredDocuments(serviceType);
 
@@ -129,6 +131,8 @@ export default function ServiceDocuments({
       setShowCharlModal(true);
     } else if (documentType === "ATS") {
       setShowATSModal(true);
+    } else if (documentType === "PERMISO_ALTURAS") {
+      setShowPermisoAlturasModal(true);
     } else {
       // Por ahora, alert para otros documentos
       alert(
@@ -140,6 +144,7 @@ export default function ServiceDocuments({
   const handleDocumentSuccess = () => {
     setShowCharlModal(false);
     setShowATSModal(false);
+    setShowPermisoAlturasModal(false);
     setSelectedDocument(null);
     // Recargar la página para mostrar el documento completado
     router.refresh();
@@ -390,6 +395,15 @@ export default function ServiceDocuments({
         <ATSModal
           serviceId={serviceId}
           onClose={() => setShowATSModal(false)}
+          onSuccess={handleDocumentSuccess}
+        />
+      )}
+
+      {/* Modal de Permiso de Alturas */}
+      {showPermisoAlturasModal && (
+        <PermisoAlturasModal
+          serviceId={serviceId}
+          onClose={() => setShowPermisoAlturasModal(false)}
           onSuccess={handleDocumentSuccess}
         />
       )}
