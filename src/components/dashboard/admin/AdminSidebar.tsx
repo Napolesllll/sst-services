@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -61,7 +62,7 @@ const menuItems = [
       </svg>
     ),
     href: "/dashboard/admin/pending",
-    badge: "5",
+    showBadge: true,
   },
   {
     title: "Empleados",
@@ -149,6 +150,32 @@ const menuItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const [pendingCount, setPendingCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPendingCount();
+
+    // Actualizar cada 30 segundos
+    const interval = setInterval(fetchPendingCount, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchPendingCount = async () => {
+    try {
+      const response = await fetch("/api/services/my-services?status=PENDING");
+      const data = await response.json();
+
+      if (response.ok) {
+        setPendingCount(data.services?.length || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching pending count:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -174,10 +201,14 @@ export default function AdminSidebar() {
                 >
                   {item.icon}
                   <span className="font-medium">{item.title}</span>
-                  {item.badge && (
-                    <span className="ml-auto bg-secondary-500 text-white text-xs px-2 py-1 rounded-full">
-                      {item.badge}
-                    </span>
+                  {item.showBadge && !loading && pendingCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="ml-auto bg-yellow-500 text-gray-900 text-xs font-bold px-2 py-1 rounded-full shadow-lg"
+                    >
+                      {pendingCount}
+                    </motion.span>
                   )}
                 </Link>
               </motion.div>

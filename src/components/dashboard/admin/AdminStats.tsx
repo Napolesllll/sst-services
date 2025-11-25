@@ -1,14 +1,25 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 
-const stats = [
+interface Stats {
+  pending: number;
+  assigned: number;
+  inProgress: number;
+  completed: number;
+  total: number;
+}
+
+interface Employee {
+  id: string;
+}
+
+const statsConfig = [
   {
     title: "Servicios Activos",
-    value: "24",
-    change: "+12%",
-    positive: true,
+    key: "active",
     icon: (
       <svg
         className="w-8 h-8"
@@ -28,9 +39,7 @@ const stats = [
   },
   {
     title: "Solicitudes Pendientes",
-    value: "5",
-    change: "-8%",
-    positive: true,
+    key: "pending",
     icon: (
       <svg
         className="w-8 h-8"
@@ -50,9 +59,7 @@ const stats = [
   },
   {
     title: "Empleados Disponibles",
-    value: "18",
-    change: "+3",
-    positive: true,
+    key: "employees",
     icon: (
       <svg
         className="w-8 h-8"
@@ -71,10 +78,8 @@ const stats = [
     color: "from-green-600 to-emerald-600",
   },
   {
-    title: "Completados (Mes)",
-    value: "142",
-    change: "+23%",
-    positive: true,
+    title: "Completados (Total)",
+    key: "completed",
     icon: (
       <svg
         className="w-8 h-8"
@@ -95,55 +100,181 @@ const stats = [
 ];
 
 export default function AdminStats() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat, index) => (
-        <motion.div
-          key={stat.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-        >
-          <Card variant="cyber" hover className="relative overflow-hidden">
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-10`}
-            ></div>
-            <div className="relative">
+  const [stats, setStats] = useState<Stats>({
+    pending: 0,
+    assigned: 0,
+    inProgress: 0,
+    completed: 0,
+    total: 0,
+  });
+  const [employeeCount, setEmployeeCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+
+      // Obtener estadísticas de servicios
+      const servicesResponse = await fetch("/api/services/my-services");
+      const servicesData = await servicesResponse.json();
+
+      if (servicesResponse.ok) {
+        setStats(servicesData.stats);
+      }
+
+      // Obtener cantidad de empleados disponibles
+      const employeesResponse = await fetch("/api/employees/available");
+      const employeesData = await employeesResponse.json();
+
+      if (employeesResponse.ok) {
+        setEmployeeCount(employeesData.total || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatValue = (key: string): number => {
+    switch (key) {
+      case "active":
+        return stats.assigned + stats.inProgress;
+      case "pending":
+        return stats.pending;
+      case "employees":
+        return employeeCount;
+      case "completed":
+        return stats.completed;
+      default:
+        return 0;
+    }
+  };
+
+  const getChangeIndicator = (
+    key: string
+  ): { value: string; positive: boolean } => {
+    // Aquí puedes implementar lógica para calcular cambios porcentuales
+    // Por ahora retornamos valores de ejemplo
+    switch (key) {
+      case "active":
+        return { value: "+12%", positive: true };
+      case "pending":
+        return {
+          value: stats.pending > 0 ? "!" : "✓",
+          positive: stats.pending === 0,
+        };
+      case "employees":
+        return { value: `+${employeeCount}`, positive: true };
+      case "completed":
+        return { value: "+23%", positive: true };
+      default:
+        return { value: "", positive: true };
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} variant="cyber">
+            <div className="animate-pulse">
               <div className="flex items-center justify-between mb-4">
-                <div
-                  className={`p-3 rounded-lg bg-gradient-to-br ${stat.color}`}
-                >
-                  {stat.icon}
-                </div>
-                <div
-                  className={`flex items-center gap-1 text-sm font-semibold ${
-                    stat.positive ? "text-green-400" : "text-red-400"
-                  }`}
-                >
-                  <svg
-                    className={`w-4 h-4 ${stat.positive ? "" : "rotate-180"}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 10l7-7m0 0l7 7m-7-7v18"
-                    />
-                  </svg>
-                  {stat.change}
-                </div>
+                <div className="w-12 h-12 bg-gray-700 rounded-lg"></div>
+                <div className="w-12 h-6 bg-gray-700 rounded"></div>
               </div>
-              <h3 className="text-gray-400 text-sm font-medium mb-1">
-                {stat.title}
-              </h3>
-              <p className="text-3xl font-bold text-white">{stat.value}</p>
+              <div className="w-24 h-4 bg-gray-700 rounded mb-2"></div>
+              <div className="w-16 h-8 bg-gray-700 rounded"></div>
             </div>
           </Card>
-        </motion.div>
-      ))}
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {statsConfig.map((stat, index) => {
+        const value = getStatValue(stat.key);
+        const change = getChangeIndicator(stat.key);
+
+        return (
+          <motion.div
+            key={stat.key}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <Card variant="cyber" hover className="relative overflow-hidden">
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-10`}
+              ></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`p-3 rounded-lg bg-gradient-to-br ${stat.color}`}
+                  >
+                    {stat.icon}
+                  </div>
+                  <div
+                    className={`flex items-center gap-1 text-sm font-semibold ${
+                      change.positive ? "text-green-400" : "text-yellow-400"
+                    }`}
+                  >
+                    {stat.key === "pending" && value > 0 ? (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                    ) : (
+                      change.positive && (
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 10l7-7m0 0l7 7m-7-7v18"
+                          />
+                        </svg>
+                      )
+                    )}
+                    {change.value}
+                  </div>
+                </div>
+                <h3 className="text-gray-400 text-sm font-medium mb-1">
+                  {stat.title}
+                </h3>
+                <motion.p
+                  key={value}
+                  initial={{ scale: 1.2, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="text-3xl font-bold text-white"
+                >
+                  {value}
+                </motion.p>
+              </div>
+            </Card>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
