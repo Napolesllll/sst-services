@@ -8,6 +8,7 @@ import CharlaSeguridadModal from "./CharlaSeguridadModal";
 import ATSModal from "./ATSModal";
 import PermisoAlturasModal from "./PermisoAlturasModal";
 import PermisoEspaciosConfinadosModal from "./PermisoEspaciosConfinadosModal";
+import PermisoTrabajoModal from "./PermisoTrabajoModal";
 
 interface Document {
   id: string;
@@ -118,6 +119,7 @@ export default function ServiceDocuments({
   const [showPermisoAlturasModal, setShowPermisoAlturasModal] = useState(false);
   const [showPermisoEspaciosModal, setShowPermisoEspaciosModal] =
     useState(false);
+  const [showPermisoTrabajoModal, setShowPermisoTrabajoModal] = useState(false);
 
   const requiredDocuments = getRequiredDocuments(serviceType);
 
@@ -138,6 +140,8 @@ export default function ServiceDocuments({
       setShowPermisoAlturasModal(true);
     } else if (documentType === "PERMISO_ESPACIOS_CONFINADOS") {
       setShowPermisoEspaciosModal(true);
+    } else if (documentType === "PERMISO_TRABAJO") {
+      setShowPermisoTrabajoModal(true);
     } else {
       // Por ahora, alert para otros documentos
       alert(
@@ -150,6 +154,8 @@ export default function ServiceDocuments({
     setShowCharlModal(false);
     setShowATSModal(false);
     setShowPermisoAlturasModal(false);
+    setShowPermisoEspaciosModal(false);
+    setShowPermisoTrabajoModal(false);
     setSelectedDocument(null);
     // Recargar la página para mostrar el documento completado
     router.refresh();
@@ -418,6 +424,15 @@ export default function ServiceDocuments({
         <PermisoEspaciosConfinadosModal
           serviceId={serviceId}
           onClose={() => setShowPermisoEspaciosModal(false)}
+          onSuccess={handleDocumentSuccess}
+        />
+      )}
+
+      {/* Modal de Permiso de Trabajo */}
+      {showPermisoTrabajoModal && (
+        <PermisoTrabajoModal
+          serviceId={serviceId}
+          onClose={() => setShowPermisoTrabajoModal(false)}
           onSuccess={handleDocumentSuccess}
         />
       )}
