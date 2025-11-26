@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import CharlaSeguridadModal from "./CharlaSeguridadModal";
 import ATSModal from "./ATSModal";
 import PermisoAlturasModal from "./PermisoAlturasModal";
+import PermisoEspaciosConfinadosModal from "./PermisoEspaciosConfinadosModal";
 
 interface Document {
   id: string;
@@ -115,6 +116,8 @@ export default function ServiceDocuments({
   const [showCharlModal, setShowCharlModal] = useState(false);
   const [showATSModal, setShowATSModal] = useState(false);
   const [showPermisoAlturasModal, setShowPermisoAlturasModal] = useState(false);
+  const [showPermisoEspaciosModal, setShowPermisoEspaciosModal] =
+    useState(false);
 
   const requiredDocuments = getRequiredDocuments(serviceType);
 
@@ -133,6 +136,8 @@ export default function ServiceDocuments({
       setShowATSModal(true);
     } else if (documentType === "PERMISO_ALTURAS") {
       setShowPermisoAlturasModal(true);
+    } else if (documentType === "PERMISO_ESPACIOS_CONFINADOS") {
+      setShowPermisoEspaciosModal(true);
     } else {
       // Por ahora, alert para otros documentos
       alert(
@@ -404,6 +409,15 @@ export default function ServiceDocuments({
         <PermisoAlturasModal
           serviceId={serviceId}
           onClose={() => setShowPermisoAlturasModal(false)}
+          onSuccess={handleDocumentSuccess}
+        />
+      )}
+
+      {/* Modal de Permiso de Espacios Confinados */}
+      {showPermisoEspaciosModal && (
+        <PermisoEspaciosConfinadosModal
+          serviceId={serviceId}
+          onClose={() => setShowPermisoEspaciosModal(false)}
           onSuccess={handleDocumentSuccess}
         />
       )}
