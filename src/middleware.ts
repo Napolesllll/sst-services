@@ -65,13 +65,16 @@ function getDashboardUrl(role: string): string {
 // Configuración de rutas que deben pasar por el middleware
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - api (API routes)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
+        /**
+         * EXCLUIR ARCHIVOS ESTÁTICOS
+         * Esto evita que el middleware intercepte imágenes como:
+         * - /logo.png
+         * - /icon.png
+         * - /images/*
+         * - /favicon.ico
+         * - /_next/*
+         * - /public/*
          */
-        "/((?!api|_next/static|_next/image|favicon.ico).*)",
+        "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.svg|.*\\.webp|public).*)",
     ],
 }

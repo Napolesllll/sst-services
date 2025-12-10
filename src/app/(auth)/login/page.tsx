@@ -7,6 +7,8 @@ import { signIn } from "next-auth/react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import Image from "next/image";
+import Logo from "./Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,6 +66,9 @@ export default function LoginPage() {
             transition={{ delay: 0.2, type: "spring" }}
             className="text-center mb-8"
           >
+            {/* 🔥 Aquí va tu logo SIN tocar nada más */}
+            <Logo />
+
             <h1 className="text-3xl font-bold text-gradient mb-2">
               Iniciar Sesión
             </h1>

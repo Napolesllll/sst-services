@@ -106,17 +106,31 @@ model User {
 
 // Modelo de Servicio
 model Service {
-  id                String        @id @default(cuid())
-  serviceType       ServiceType
-  status            ServiceStatus @default(PENDING)
-  description       String        @db.Text
-  address           String
-  contactPerson     String
-  contactPhone      String
-  suggestedDate     DateTime
-  startDate         DateTime?
-  endDate           DateTime?
-  observations      String?       @db.Text
+  id                          String        @id @default(cuid())
+  serviceType                 ServiceType
+  status                      ServiceStatus @default(PENDING)
+  description                 String        @db.Text
+  address                     String?
+  contactPerson               String
+  contactPhone                String
+  suggestedDate               DateTime?
+  startDate                   DateTime?
+  endDate                     DateTime?
+  observations                String?       @db.Text
+  
+  // NUEVOS CAMPOS
+  empresaContratante          String        // Empresa contratante
+  personaSolicita             String        // Persona quien solicita
+  cantidadRequerida           Int           // Cantidad requerida del servicio
+  equiposUtilizar             String        @db.Text // Equipos a utilizar
+  herramientasUtilizar        String        @db.Text // Herramientas a utilizar
+  maquinasUtilizar            String        @db.Text // Máquinas a utilizar
+  numeroTrabajadores          Int           // Número de trabajadores
+  municipio                   String        // Municipio
+  empresaPrestacionServicio   String        // Empresa donde se prestará el servicio
+  fechaInicio                 DateTime      // Fecha probable de inicio
+  fechaTerminacion            DateTime      // Fecha probable de terminación
+  horarioEjecucion            String        // Horario de ejecución
   
   // Relaciones con usuarios
   clientId          String
@@ -143,6 +157,7 @@ model Service {
   @@index([status])
   @@index([serviceType])
   @@index([suggestedDate])
+  @@index([municipio])
 }
 
 // Asignación de empleados a servicios (permite múltiples empleados)
