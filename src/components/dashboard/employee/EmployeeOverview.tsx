@@ -3,18 +3,29 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 
 interface Service {
   id: string;
   serviceType: string;
   status: string;
   description: string;
-  address: string;
+  address: string | null;
   contactPerson: string;
   contactPhone: string;
   suggestedDate: string;
+  // Nuevos campos del formulario
+  empresaContratante: string;
+  personaSolicita: string;
+  cantidadRequerida: number;
+  equiposUtilizar: string;
+  herramientasUtilizar: string;
+  maquinasUtilizar: string;
+  numeroTrabajadores: number;
+  municipio: string;
+  empresaPrestacionServicio: string;
+  fechaInicio: string;
+  fechaTerminacion: string;
+  horarioEjecucion: string;
   client: {
     id: string;
     name: string;
@@ -77,9 +88,70 @@ const formatDate = (dateString: string) => {
     year: "numeric",
     month: "long",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
+};
+
+const Card = ({
+  children,
+  variant = "default",
+  hover = false,
+}: {
+  children: React.ReactNode;
+  variant?: "default" | "cyber";
+  hover?: boolean;
+}) => {
+  const baseClasses = "rounded-xl p-6 transition-all duration-300";
+  const variantClasses = {
+    default: "bg-gray-800 border border-gray-700",
+    cyber:
+      "bg-gradient-to-br from-gray-800/90 to-gray-900/90 border border-gray-700 shadow-xl",
+  };
+  const hoverClasses = hover
+    ? "hover:shadow-2xl hover:border-primary-500/50"
+    : "";
+
+  return (
+    <div
+      className={`${baseClasses} ${
+        variantClasses[variant as keyof typeof variantClasses]
+      } ${hoverClasses}`}
+    >
+      {children}
+    </div>
+  );
+};
+
+const Button = ({
+  children,
+  variant = "primary",
+  fullWidth = false,
+  onClick,
+  disabled = false,
+}: {
+  children: React.ReactNode;
+  variant?: "primary" | "secondary";
+  fullWidth?: boolean;
+  onClick?: () => void;
+  disabled?: boolean;
+}) => {
+  const baseClasses =
+    "px-6 py-3 rounded-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
+  const variantClasses = {
+    primary:
+      "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg hover:shadow-xl",
+    secondary: "bg-gray-700 hover:bg-gray-600 text-white",
+  };
+  const widthClass = fullWidth ? "w-full" : "";
+
+  return (
+    <button
+      className={`${baseClasses} ${variantClasses[variant]} ${widthClass}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  );
 };
 
 export default function EmployeeOverview() {
@@ -92,6 +164,7 @@ export default function EmployeeOverview() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expandedService, setExpandedService] = useState<string | null>(null);
 
   useEffect(() => {
     fetchServices();
@@ -119,6 +192,10 @@ export default function EmployeeOverview() {
     }
   };
 
+  const toggleExpand = (serviceId: string) => {
+    setExpandedService(expandedService === serviceId ? null : serviceId);
+  };
+
   if (loading) {
     return (
       <motion.div
@@ -135,7 +212,7 @@ export default function EmployeeOverview() {
             rotate: { duration: 1, repeat: Infinity, ease: "linear" },
             scale: { duration: 1, repeat: Infinity },
           }}
-          className="rounded-full h-12 w-12 border-b-2 border-primary-500"
+          className="rounded-full h-12 w-12 border-b-2 border-blue-500"
         />
       </motion.div>
     );
@@ -178,11 +255,7 @@ export default function EmployeeOverview() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Button
-                variant="secondary"
-                className="mt-4"
-                onClick={fetchServices}
-              >
+              <Button variant="secondary" onClick={fetchServices}>
                 Reintentar
               </Button>
             </motion.div>
@@ -340,10 +413,7 @@ export default function EmployeeOverview() {
               </motion.p>
             </motion.div>
           ) : (
-            <motion.div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-              layout
-            >
+            <motion.div className="grid grid-cols-1 gap-6" layout>
               <AnimatePresence>
                 {services.map((service, index) => (
                   <motion.div
@@ -358,76 +428,138 @@ export default function EmployeeOverview() {
                       type: "spring",
                       stiffness: 100,
                     }}
-                    whileHover={{
-                      scale: 1.02,
-                      y: -5,
-                      transition: {
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 10,
-                      },
-                    }}
-                    className="p-5 rounded-lg bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 hover:border-primary-500/50 transition-all shadow-lg hover:shadow-xl hover:shadow-primary-500/10"
+                    className="p-6 rounded-xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700 hover:border-blue-500/50 transition-all shadow-lg"
                   >
-                    <motion.div
-                      className="flex items-start justify-between mb-4"
-                      whileHover={{ x: 5 }}
-                    >
+                    {/* Header del Servicio */}
+                    <div className="flex items-start justify-between mb-6">
                       <div>
                         <motion.h3
-                          className="text-xl font-semibold text-white mb-2"
+                          className="text-2xl font-bold text-white mb-2"
                           whileHover={{ color: "#60a5fa" }}
                         >
-                          {service.client.name}
+                          {service.empresaContratante}
                         </motion.h3>
-                        <motion.p
-                          className="text-secondary-400 font-medium"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          {getServiceTypeName(service.serviceType)}
-                        </motion.p>
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-cyan-400 font-semibold text-lg">
+                            {getServiceTypeName(service.serviceType)}
+                          </span>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-gray-400">
+                            {service.cantidadRequerida} requerido(s)
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-sm">
+                          Solicitado por: {service.personaSolicita}
+                        </p>
                       </div>
                       {getStatusBadge(service.status)}
-                    </motion.div>
+                    </div>
 
-                    <motion.p
-                      className="text-gray-300 mb-4"
+                    {/* Descripción Principal */}
+                    <motion.div
+                      className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: index * 0.1 + 0.3 }}
                     >
-                      {service.description}
-                    </motion.p>
+                      <h4 className="text-sm font-semibold text-gray-400 mb-2">
+                        Descripción del Servicio
+                      </h4>
+                      <p className="text-gray-300">{service.description}</p>
+                    </motion.div>
 
-                    <motion.div
-                      className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.1 + 0.4 }}
-                    >
-                      {[
-                        {
-                          icon: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z",
-                          text: service.address,
-                        },
-                        {
-                          icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
-                          text: formatDate(service.suggestedDate),
-                        },
-                        {
-                          icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
-                          text: service.contactPerson,
-                        },
-                        {
-                          icon: "M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z",
-                          text: service.contactPhone,
-                        },
-                      ].map((item, itemIndex) => (
-                        <motion.div
-                          key={itemIndex}
-                          className="flex items-center gap-2 text-gray-400 text-sm"
-                          whileHover={{ scale: 1.05, color: "#fbbf24" }}
-                          transition={{ type: "spring", stiffness: 400 }}
+                    {/* Grid de Información Principal */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                      {/* Ubicación */}
+                      <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+                        <div className="flex items-center gap-2 text-blue-400 mb-2">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          <span className="font-semibold text-sm">
+                            Ubicación
+                          </span>
+                        </div>
+                        <p className="text-gray-300 text-sm mb-1">
+                          {service.municipio}
+                        </p>
+                        {service.address && (
+                          <p className="text-gray-400 text-xs">
+                            {service.address}
+                          </p>
+                        )}
+                        <p className="text-gray-400 text-xs mt-2">
+                          Empresa: {service.empresaPrestacionServicio}
+                        </p>
+                      </div>
+
+                      {/* Fechas */}
+                      <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+                        <div className="flex items-center gap-2 text-green-400 mb-2">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                          <span className="font-semibold text-sm">Periodo</span>
+                        </div>
+                        <p className="text-gray-300 text-sm">
+                          <span className="text-gray-400">Inicio:</span>{" "}
+                          {formatDate(service.fechaInicio)}
+                        </p>
+                        <p className="text-gray-300 text-sm">
+                          <span className="text-gray-400">Fin:</span>{" "}
+                          {formatDate(service.fechaTerminacion)}
+                        </p>
+                        <p className="text-gray-400 text-xs mt-2">
+                          Horario: {service.horarioEjecucion}
+                        </p>
+                      </div>
+
+                      {/* Contacto */}
+                      <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+                        <div className="flex items-center gap-2 text-purple-400 mb-2">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          <span className="font-semibold text-sm">
+                            Coordinador
+                          </span>
+                        </div>
+                        <p className="text-gray-300 text-sm mb-1">
+                          {service.contactPerson}
+                        </p>
+                        <a
+                          href={`tel:${service.contactPhone}`}
+                          className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
                         >
                           <svg
                             className="w-4 h-4"
@@ -439,16 +571,161 @@ export default function EmployeeOverview() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d={item.icon}
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                             />
                           </svg>
-                          {item.text}
-                        </motion.div>
-                      ))}
+                          {service.contactPhone}
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Sección Expandible: Detalles Técnicos */}
+                    <motion.div
+                      initial={false}
+                      className="border-t border-gray-700 pt-4"
+                    >
+                      <button
+                        onClick={() => toggleExpand(service.id)}
+                        className="w-full flex items-center justify-between text-left mb-4 hover:text-blue-400 transition-colors"
+                      >
+                        <span className="font-semibold text-white">
+                          Detalles Técnicos del Proyecto
+                        </span>
+                        <motion.svg
+                          animate={{
+                            rotate: expandedService === service.id ? 180 : 0,
+                          }}
+                          transition={{ duration: 0.3 }}
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </motion.svg>
+                      </button>
+
+                      <AnimatePresence>
+                        {expandedService === service.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="space-y-4 overflow-hidden"
+                          >
+                            {/* Número de Trabajadores */}
+                            <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                              <svg
+                                className="w-5 h-5 text-yellow-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                />
+                              </svg>
+                              <div>
+                                <p className="text-xs text-gray-400">
+                                  Número de Trabajadores
+                                </p>
+                                <p className="text-white font-semibold">
+                                  {service.numeroTrabajadores} trabajadores
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Equipos */}
+                            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                              <h5 className="text-sm font-semibold text-blue-400 mb-2 flex items-center gap-2">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                                  />
+                                </svg>
+                                Equipos a Utilizar
+                              </h5>
+                              <p className="text-gray-300 text-sm">
+                                {service.equiposUtilizar}
+                              </p>
+                            </div>
+
+                            {/* Herramientas */}
+                            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                              <h5 className="text-sm font-semibold text-green-400 mb-2 flex items-center gap-2">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                </svg>
+                                Herramientas a Utilizar
+                              </h5>
+                              <p className="text-gray-300 text-sm">
+                                {service.herramientasUtilizar}
+                              </p>
+                            </div>
+
+                            {/* Máquinas */}
+                            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                              <h5 className="text-sm font-semibold text-orange-400 mb-2 flex items-center gap-2">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                                  />
+                                </svg>
+                                Máquinas a Utilizar
+                              </h5>
+                              <p className="text-gray-300 text-sm">
+                                {service.maquinasUtilizar}
+                              </p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.div>
 
+                    {/* Botones de Acción */}
                     <motion.div
-                      className="flex gap-2 pt-4 border-t border-gray-700"
+                      className="flex gap-3 pt-4 border-t border-gray-700 mt-4"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 + 0.5 }}
@@ -466,10 +743,48 @@ export default function EmployeeOverview() {
                           )
                         }
                       >
-                        {service.status === "ASSIGNED"
-                          ? "Ver y Comenzar"
-                          : "Continuar Servicio"}
+                        <div className="flex items-center justify-center gap-2">
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                            />
+                          </svg>
+                          {service.status === "ASSIGNED"
+                            ? "Ver y Comenzar"
+                            : "Continuar Servicio"}
+                        </div>
                       </Button>
+
+                      <button
+                        onClick={() => {
+                          // Función para llamar al coordinador
+                          window.location.href = `tel:${service.contactPhone}`;
+                        }}
+                        className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
+                        </svg>
+                        Llamar
+                      </button>
                     </motion.div>
                   </motion.div>
                 ))}
