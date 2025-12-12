@@ -109,7 +109,7 @@ export default function Home() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="text-center relative z-10"
       >
-        {/* Logo principal con efectos espectaculares */}
+        {/* Logo principal con efectos espectaculares MEJORADOS */}
         <motion.div
           initial={{ opacity: 0, scale: 0, rotate: -180 }}
           animate={
@@ -129,26 +129,17 @@ export default function Home() {
           }}
           className="relative mb-8 mx-auto"
         >
-          {/* Anillo exterior giratorio */}
+          {/* Anillo exterior giratorio con efecto de pulso */}
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "linear",
-            }}
             className="absolute inset-0 rounded-full border-2 border-primary-500/30"
-          />
-
-          {/* Anillo interior con gradiente */}
-          <motion.div
             animate={{
-              rotate: -360,
-              scale: [1, 1.05, 1],
+              rotate: 360,
+              scale: [1, 1.1, 1],
+              borderWidth: [2, 3, 2],
             }}
             transition={{
               rotate: {
-                duration: 6,
+                duration: 8,
                 repeat: Infinity,
                 ease: "linear",
               },
@@ -157,76 +148,269 @@ export default function Home() {
                 repeat: Infinity,
                 ease: "easeInOut",
               },
+              borderWidth: {
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              },
+            }}
+          />
+
+          {/* Anillo medio giratorio en dirección opuesta */}
+          <motion.div
+            className="absolute inset-4 rounded-full border border-secondary-500/40"
+            animate={{
+              rotate: -360,
+              scale: [0.9, 1, 0.9],
+            }}
+            transition={{
+              rotate: {
+                duration: 6,
+                repeat: Infinity,
+                ease: "linear",
+              },
+              scale: {
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              },
+            }}
+          />
+
+          {/* Logo central con efectos mejorados */}
+          <motion.div
+            animate={{
+              rotate: 360,
+              scale: [1, 1.05, 1],
+              boxShadow: [
+                "0 0 20px rgba(59, 130, 246, 0.3)",
+                "0 0 40px rgba(59, 130, 246, 0.5)",
+                "0 0 20px rgba(59, 130, 246, 0.3)",
+              ],
+            }}
+            transition={{
+              rotate: {
+                duration: 10,
+                repeat: Infinity,
+                ease: "linear",
+              },
+              scale: {
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              },
+              boxShadow: {
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              },
             }}
             className="w-32 h-32 rounded-full bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600 flex items-center justify-center mx-auto relative overflow-hidden"
           >
-            {/* Gradiente animado */}
+            {/* Gradiente animado mejorado */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-primary-600 via-secondary-600 to-primary-600"
               animate={{
-                backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
+                background: [
+                  "linear-gradient(0deg, #3b82f6 0%, #8b5cf6 50%, #3b82f6 100%)",
+                  "linear-gradient(180deg, #3b82f6 0%, #8b5cf6 50%, #3b82f6 100%)",
+                  "linear-gradient(360deg, #3b82f6 0%, #8b5cf6 50%, #3b82f6 100%)",
+                ],
+                rotate: 360,
               }}
               transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: "linear",
+                background: {
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "linear",
+                },
+                rotate: {
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "linear",
+                },
               }}
               style={{
                 backgroundSize: "200% 200%",
               }}
             />
 
-            {/* Efecto de brillo interno */}
+            {/* Efecto de brillo interno pulsante */}
             <motion.div
               animate={{
-                opacity: [0.3, 0.6, 0.3],
+                opacity: [0.2, 0.5, 0.2],
+                scale: [1, 1.1, 1],
               }}
               transition={{
                 duration: 2,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              className="absolute inset-4 rounded-full bg-white/20 blur-sm"
+              className="absolute inset-4 rounded-full bg-white/30 blur-sm"
             />
 
-            {/* Logo personalizado - SIN ANIMACIONES */}
+            {/* Centro con efecto de pulso */}
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.8, 1, 0.8],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute inset-8 rounded-full bg-gradient-to-br from-white/20 to-transparent blur-xs"
+            />
+
+            {/* Logo personalizado */}
             <div className="w-20 h-20 relative z-10 flex items-center justify-center">
-              <img
+              <motion.img
                 src="/icon.png"
                 alt="Logo"
                 className="w-full h-full object-contain"
+                animate={{
+                  rotate: [0, 360],
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{
+                  rotate: {
+                    duration: 15,
+                    repeat: Infinity,
+                    ease: "linear",
+                  },
+                  scale: {
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  },
+                }}
                 onError={(e) => {
                   console.error("Error cargando logo:", e);
-                  // Fallback a un icono simple si el logo no carga
                   e.currentTarget.onerror = null;
                   e.currentTarget.src =
                     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E";
                 }}
               />
             </div>
+
+            {/* Efecto de chispas alrededor del logo */}
+            <motion.div
+              className="absolute inset-0"
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 12,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            >
+              {[...Array(12)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-gradient-to-r from-primary-300 to-secondary-300 rounded-full"
+                  style={{
+                    left: "50%",
+                    top: "0%",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  animate={{
+                    x: Math.cos((i * 30 * Math.PI) / 180) * 48,
+                    y: Math.sin((i * 30 * Math.PI) / 180) * 48,
+                    scale: [0, 1, 0],
+                    opacity: [0, 1, 0],
+                  }}
+                  transition={{
+                    x: {
+                      duration: 0.1,
+                    },
+                    y: {
+                      duration: 0.1,
+                    },
+                    scale: {
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                      ease: "easeInOut",
+                    },
+                    opacity: {
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                      ease: "easeInOut",
+                    },
+                  }}
+                />
+              ))}
+            </motion.div>
           </motion.div>
 
-          {/* Partículas alrededor del logo */}
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-primary-400 rounded-full"
-              style={{
-                left: `${Math.cos((i * 45 * Math.PI) / 180) * 60 + 50}%`,
-                top: `${Math.sin((i * 45 * Math.PI) / 180) * 60 + 50}%`,
-              }}
-              animate={{
-                scale: [0, 1, 0],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: i * 0.3,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
+          {/* Partículas orbitales mejoradas */}
+          <motion.div
+            className="absolute inset-0"
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          >
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full"
+                style={{
+                  left: "50%",
+                  top: "0%",
+                  transform: "translate(-50%, -50%)",
+                }}
+                animate={{
+                  x: Math.cos((i * 45 * Math.PI) / 180) * 70,
+                  y: Math.sin((i * 45 * Math.PI) / 180) * 70,
+                  scale: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  x: {
+                    duration: 0.1,
+                  },
+                  y: {
+                    duration: 0.1,
+                  },
+                  scale: {
+                    duration: 2,
+                    repeat: Infinity,
+                    delay: i * 0.2,
+                    ease: "easeInOut",
+                  },
+                }}
+              />
+            ))}
+          </motion.div>
+
+          {/* Partículas radiales externas */}
+          <div className="absolute inset-0">
+            {[...Array(16)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white/40 rounded-full"
+                style={{
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+                animate={{
+                  x: Math.cos((i * 22.5 * Math.PI) / 180) * 90,
+                  y: Math.sin((i * 22.5 * Math.PI) / 180) * 90,
+                  opacity: [0, 0.8, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: i * 0.15,
+                  ease: "easeInOut",
+                }}
+              />
+            ))}
+          </div>
         </motion.div>
 
         {/* Texto principal */}
@@ -237,7 +421,7 @@ export default function Home() {
           className="text-6xl md:text-7xl font-bold mb-6 relative"
         >
           <motion.span
-            className="bg-gradient-to-r from-primary-400 via-secondary-400 to-primary-400 bg-clip-text text-transparent"
+            className="bg-gradient-to-r from-primary-300 via-secondary-300 to-primary-300 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
             style={{
               backgroundSize: "200% 200%",
             }}

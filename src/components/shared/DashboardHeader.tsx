@@ -160,13 +160,7 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
         >
           {/* Notificaciones con WebSocket - Contenedor con z-index más alto */}
           <div className="relative z-[9999]">
-            <NotificationsPanelRealtime
-              user={{
-                ...user,
-                name: user.name ?? undefined,
-                email: user.email ?? undefined,
-              }}
-            />
+            <NotificationsPanelRealtime />
           </div>
 
           {/* User Info */}

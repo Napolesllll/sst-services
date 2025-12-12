@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma"
  */
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth()
@@ -21,8 +21,10 @@ export async function GET(
             )
         }
 
+        const { id } = await params;
+
         const notification = await prisma.notification.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!notification) {
@@ -43,7 +45,7 @@ export async function GET(
         // Marcar como leída automáticamente al obtenerla
         if (!notification.read) {
             await prisma.notification.update({
-                where: { id: params.id },
+                where: { id },
                 data: { read: true },
             })
             notification.read = true
@@ -67,7 +69,7 @@ export async function GET(
  */
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth()
@@ -79,8 +81,10 @@ export async function DELETE(
             )
         }
 
+        const { id } = await params;
+
         const notification = await prisma.notification.findUnique({
-            where: { id: params.id },
+            where: { id },
         })
 
         if (!notification) {
@@ -99,7 +103,7 @@ export async function DELETE(
         }
 
         await prisma.notification.delete({
-            where: { id: params.id },
+            where: { id },
         })
 
         return NextResponse.json({

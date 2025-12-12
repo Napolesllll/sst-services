@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
@@ -35,7 +37,7 @@ export default function NotificationsPanelRealtime() {
       auth: {
         userId: session.user.id,
         userRole: session.user.role,
-        token: "session-token", // Aquí podrías pasar el token real
+        token: "session-token",
       },
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -48,7 +50,6 @@ export default function NotificationsPanelRealtime() {
     socket.on("connect", () => {
       console.log("✅ WebSocket connected");
       setIsConnected(true);
-      // Reanudar el contexto de audio después de la primera interacción
       notificationSound.resume();
     });
 
@@ -64,27 +65,23 @@ export default function NotificationsPanelRealtime() {
     socket.on("reconnect", (attemptNumber) => {
       console.log("🔄 Reconnected after", attemptNumber, "attempts");
       setIsConnected(true);
-      fetchNotifications(); // Recargar notificaciones al reconectar
+      fetchNotifications();
     });
 
     socket.on("reconnect_error", (error) => {
       console.error("❌ Reconnection error:", error);
     });
 
-    // Escuchar nuevas notificaciones en tiempo real
     socket.on("new_notification", (notification: Notification) => {
       console.log("🔔 New notification received:", notification);
 
-      // Agregar a la lista
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
 
-      // Reproducir sonido si está habilitado
       if (soundEnabled && notificationSound.isEnabled()) {
         notificationSound.playForType(notification.type);
       }
 
-      // Mostrar notificación del navegador si tiene permiso
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(notification.title, {
           body: notification.message,
@@ -94,13 +91,13 @@ export default function NotificationsPanelRealtime() {
         });
       }
 
-      // Guardar en cola para animación
       notificationQueueRef.current.push(notification);
     });
 
     socket.on("notification_deleted", (notificationId: string) => {
       console.log("🗑️ Notification deleted:", notificationId);
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     });
 
     socket.on("notifications_marked_read", (notificationIds: string[]) => {
@@ -113,12 +110,11 @@ export default function NotificationsPanelRealtime() {
       setUnreadCount((prev) => Math.max(0, prev - notificationIds.length));
     });
 
-    // Ping periódico para mantener conexión
     const pingInterval = setInterval(() => {
       if (socket.connected) {
         socket.emit("ping");
       }
-    }, 30000); // cada 30 segundos
+    }, 30000);
 
     return () => {
       clearInterval(pingInterval);
@@ -126,19 +122,15 @@ export default function NotificationsPanelRealtime() {
     };
   }, [session?.user, soundEnabled]);
 
-  // Cargar notificaciones iniciales
   useEffect(() => {
     if (session?.user) {
       fetchNotifications();
-      // Solicitar permiso para notificaciones del navegador
       requestNotificationPermission();
-      // Cargar preferencia de sonido
       const soundPref = localStorage.getItem("notificationSoundsEnabled");
       setSoundEnabled(soundPref !== "false");
     }
   }, [session?.user]);
 
-  // Cerrar al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -213,7 +205,12 @@ export default function NotificationsPanelRealtime() {
     }
   };
 
-  const deleteNotification = async (notificationId: string) => {
+  const deleteNotification = async (
+    notificationId: string,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation(); // Evitar que se propague el evento
+
     try {
       const response = await fetch(`/api/notifications/${notificationId}`, {
         method: "DELETE",
@@ -222,6 +219,8 @@ export default function NotificationsPanelRealtime() {
       if (response.ok) {
         const notification = notifications.find((n) => n.id === notificationId);
         setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+
+        // Solo decrementar el contador si la notificación no estaba leída
         if (notification && !notification.read) {
           setUnreadCount((prev) => Math.max(0, prev - 1));
         }
@@ -235,7 +234,6 @@ export default function NotificationsPanelRealtime() {
     const newState = notificationSound.toggle();
     setSoundEnabled(newState);
 
-    // Reproducir sonido de prueba
     if (newState) {
       notificationSound.playNotificationSound();
     }
@@ -246,7 +244,7 @@ export default function NotificationsPanelRealtime() {
       case "service_requested":
       case "service_created":
         return (
-          <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+          <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400 flex-shrink-0">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -265,7 +263,7 @@ export default function NotificationsPanelRealtime() {
       case "service_assigned":
       case "service_assigned_to_client":
         return (
-          <div className="p-2 rounded-lg bg-green-500/20 text-green-400">
+          <div className="p-2 rounded-lg bg-green-500/20 text-green-400 flex-shrink-0">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -283,7 +281,7 @@ export default function NotificationsPanelRealtime() {
         );
       case "service_started":
         return (
-          <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400">
+          <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400 flex-shrink-0">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -302,7 +300,7 @@ export default function NotificationsPanelRealtime() {
       case "service_completed":
       case "service_completed_admin":
         return (
-          <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+          <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 flex-shrink-0">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -320,7 +318,7 @@ export default function NotificationsPanelRealtime() {
         );
       default:
         return (
-          <div className="p-2 rounded-lg bg-gray-500/20 text-gray-400">
+          <div className="p-2 rounded-lg bg-gray-500/20 text-gray-400 flex-shrink-0">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -363,7 +361,6 @@ export default function NotificationsPanelRealtime() {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-lg hover:bg-gray-800/50 transition-colors backdrop-blur-sm"
       >
-        {/* Indicador de conexión */}
         <div
           className={`absolute top-0 right-0 w-2 h-2 rounded-full ${
             isConnected ? "bg-green-500" : "bg-red-500"
@@ -386,7 +383,6 @@ export default function NotificationsPanelRealtime() {
           />
         </motion.svg>
 
-        {/* Badge de notificaciones no leídas */}
         {unreadCount > 0 && (
           <motion.span
             initial={{ scale: 0 }}
@@ -406,23 +402,22 @@ export default function NotificationsPanelRealtime() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-96 max-h-[600px] bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50"
+            className="fixed md:absolute right-2 md:right-0 mt-2 w-[calc(100vw-16px)] md:w-96 max-h-[85vh] md:max-h-[80vh] bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-[9999]"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-4 z-10">
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-3 md:p-4 z-10">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-white">
+                  <h3 className="text-base md:text-lg font-bold text-white">
                     Notificaciones
                   </h3>
                   {isConnected && (
                     <span className="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full border border-green-500/50">
-                      En vivo
+                      En linea
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Botón de sonido */}
                   <button
                     onClick={toggleSound}
                     className={`p-1.5 rounded-lg transition-colors ${
@@ -462,7 +457,7 @@ export default function NotificationsPanelRealtime() {
                     <button
                       onClick={markAllAsRead}
                       disabled={loading}
-                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50 whitespace-nowrap"
                     >
                       {loading ? "..." : "Marcar todas"}
                     </button>
@@ -477,11 +472,11 @@ export default function NotificationsPanelRealtime() {
             </div>
 
             {/* Lista de notificaciones */}
-            <div className="overflow-y-auto max-h-[500px] custom-scrollbar">
+            <div className="overflow-y-auto max-h-[calc(85vh-120px)] md:max-h-[calc(80vh-120px)] custom-scrollbar">
               {notifications.length === 0 ? (
-                <div className="p-8 text-center">
+                <div className="p-6 md:p-8 text-center">
                   <svg
-                    className="w-16 h-16 text-gray-600 mx-auto mb-3"
+                    className="w-12 h-12 md:w-16 md:h-16 text-gray-600 mx-auto mb-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -505,19 +500,17 @@ export default function NotificationsPanelRealtime() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      onClick={() =>
-                        !notification.read && markAsRead(notification.id)
-                      }
-                      className={`p-4 hover:bg-gray-800/50 transition-colors cursor-pointer ${
+                      className={`p-3 md:p-4 hover:bg-gray-800/50 transition-colors ${
                         !notification.read ? "bg-blue-500/5" : ""
                       }`}
                     >
-                      <div className="flex gap-3">
+                      <div className="flex gap-2 md:gap-3">
                         {getNotificationIcon(notification.type)}
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <h4
-                              className={`text-sm font-semibold ${
+                              className={`text-sm font-semibold pr-2 break-words ${
                                 notification.read
                                   ? "text-gray-300"
                                   : "text-white"
@@ -525,38 +518,51 @@ export default function NotificationsPanelRealtime() {
                             >
                               {notification.title}
                             </h4>
-                            {!notification.read && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1" />
-                            )}
+
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {!notification.read && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRead(notification.id);
+                                  }}
+                                  className="w-2 h-2 bg-blue-500 rounded-full hover:bg-blue-400 transition-colors"
+                                  title="Marcar como leída"
+                                />
+                              )}
+
+                              <button
+                                onClick={(e) =>
+                                  deleteNotification(notification.id, e)
+                                }
+                                className="text-gray-500 hover:text-red-400 transition-colors p-1 rounded hover:bg-red-500/10"
+                                title="Eliminar notificación"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+
+                          <p className="text-xs md:text-sm text-gray-400 mb-2 whitespace-normal break-words pr-2">
                             {notification.message}
                           </p>
+
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-500">
                               {formatDate(notification.createdAt)}
                             </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteNotification(notification.id);
-                              }}
-                              className="text-gray-500 hover:text-red-400 transition-colors p-1"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </button>
                           </div>
                         </div>
                       </div>
