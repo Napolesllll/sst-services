@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { emitNotificationToAdmins } from "@/lib/websocket/emitNotification"
 
 export async function POST(request: Request) {
     try {
@@ -168,8 +169,8 @@ export async function POST(request: Request) {
         })
 
         if (admins.length > 0) {
-            const notifications = admins.map((admin) => ({
-                userId: admin.id,
+            const notificationData = {
+                userId: admins[0].id, // Para la estructura
                 title: "Nueva Solicitud de Servicio",
                 message: `${session.user.name} de ${body.empresaContratante} ha solicitado un servicio de tipo ${getServiceTypeName(body.serviceType)} en ${body.municipio}`,
                 type: "service_requested",
@@ -180,13 +181,27 @@ export async function POST(request: Request) {
                     municipio: body.municipio,
                     fechaInicio: body.fechaInicio,
                 },
+            }
+
+            const notifications = admins.map((admin) => ({
+                ...notificationData,
+                userId: admin.id,
             }))
 
             await prisma.notification.createMany({
                 data: notifications,
             })
-        }
 
+            // 🔥 ENVIAR VÍA WEBSOCKET
+            notifications.forEach(notification => {
+                emitNotificationToAdmins({
+                    ...notification,
+                    id: 'temp-id', // Se generará en DB
+                    read: false,
+                    createdAt: new Date(),
+                })
+            })
+        }
         // Registrar actividad
         await prisma.activityLog.create({
             data: {

@@ -1,13 +1,16 @@
+// components/shared/DashboardHeader.tsx
 "use client";
 
 import { motion } from "framer-motion";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
-import Image from "next/image"; // 👈 IMPORTANTE para el logo
+import { useState } from "react";
+import Image from "next/image";
+import NotificationsPanelRealtime from "./NotificationsPanelRealtime";
 
 interface DashboardHeaderProps {
   user: {
+    id: string;
     name?: string | null;
     email?: string | null;
     role: string;
@@ -18,8 +21,6 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
   const router = useRouter();
   const [isHoveringLogo, setIsHoveringLogo] = useState(false);
   const [isHoveringLogout, setIsHoveringLogout] = useState(false);
-  const [showNotificationPulse, setShowNotificationPulse] = useState(true);
-  const notificationRef = useRef<HTMLButtonElement>(null);
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -40,20 +41,12 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
     }
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowNotificationPulse(true);
-      setTimeout(() => setShowNotificationPulse(false), 2000);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <motion.header
       initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800 overflow-hidden"
+      className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800"
       style={{
         background:
           "linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.9) 50%, rgba(17, 24, 39, 0.95) 100%)",
@@ -95,7 +88,7 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
       />
 
       <div className="flex items-center justify-between px-6 py-4 relative z-10">
-        {/* LOGO REAL */}
+        {/* LOGO */}
         <motion.div
           initial={{ opacity: 0, x: -20, scale: 0.8 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -118,7 +111,6 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
             transition={{ duration: 0.5 }}
             className="relative w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-black/20"
           >
-            {/* TU LOGO — FUNCIONANDO  */}
             <Image
               src="/logo.png"
               alt="SST Services Logo"
@@ -159,54 +151,23 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
           </motion.div>
         </motion.div>
 
-        {/* RESTO DEL HEADER (NO TOCADO) */}
+        {/* LADO DERECHO */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ type: "spring", stiffness: 150, damping: 12 }}
           className="flex items-center gap-4"
         >
-          {/* Notificaciones */}
-          <motion.button
-            ref={notificationRef}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-            className="relative p-2 rounded-lg hover:bg-gray-800/50 transition-colors backdrop-blur-sm"
-          >
-            <motion.svg
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
-              className="w-6 h-6 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </motion.svg>
-
-            <motion.span
-              animate={{
-                scale: showNotificationPulse ? [1, 1.5, 1] : 1,
-                opacity: showNotificationPulse ? [1, 0, 1] : 1,
+          {/* Notificaciones con WebSocket - Contenedor con z-index más alto */}
+          <div className="relative z-[9999]">
+            <NotificationsPanelRealtime
+              user={{
+                ...user,
+                name: user.name ?? undefined,
+                email: user.email ?? undefined,
               }}
-              transition={{ duration: 1 }}
-              className="absolute top-1 right-1 w-2 h-2 bg-secondary-500 rounded-full"
             />
-
-            <motion.span
-              animate={{
-                scale: showNotificationPulse ? [1, 2, 1] : 1,
-                opacity: showNotificationPulse ? [0.5, 0, 0.5] : 0,
-              }}
-              transition={{ duration: 1.5 }}
-              className="absolute top-1 right-1 w-2 h-2 border-2 border-secondary-500 rounded-full"
-            />
-          </motion.button>
+          </div>
 
           {/* User Info */}
           <motion.div

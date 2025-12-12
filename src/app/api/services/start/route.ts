@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { emitNotificationToUser } from "@/lib/websocket/emitNotification"
+
 
 export async function POST(request: Request) {
     try {
@@ -82,6 +84,22 @@ export async function POST(request: Request) {
                 },
             },
         })
+
+        const notification = await prisma.notification.create({
+            data: {
+                userId: service.clientId,
+                title: "Servicio Iniciado",
+                message: `${session.user.name} ha iniciado el servicio de ${service.serviceType}`,
+                type: "service_started",
+                data: {
+                    serviceId: service.id,
+                    employeeName: session.user.name,
+                },
+            },
+        })
+
+        // 🔥 ENVIAR VÍA WEBSOCKET
+        emitNotificationToUser(service.clientId, notification)
 
         // Registrar actividad
         await prisma.activityLog.create({

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { emitNotificationToUser, emitNotificationToAdmins } from "@/lib/websocket/emitNotification"
 
 export async function POST(request: Request) {
     try {
@@ -62,10 +63,6 @@ export async function POST(request: Request) {
             )
         }
 
-        // TODO: Aquí podrías agregar validaciones adicionales
-        // Por ejemplo: verificar que todos los documentos obligatorios estén completados
-        // verificar que todas las inspecciones requeridas estén hechas, etc.
-
         // Cambiar estado a COMPLETED
         const updatedService = await prisma.service.update({
             where: { id: serviceId },
@@ -76,8 +73,8 @@ export async function POST(request: Request) {
             },
         })
 
-        // Crear notificación para el cliente
-        await prisma.notification.create({
+        // ✅ NOTIFICACIÓN AL CLIENTE
+        const clientNotification = await prisma.notification.create({
             data: {
                 userId: service.clientId,
                 title: "Servicio Completado",
@@ -90,7 +87,10 @@ export async function POST(request: Request) {
             },
         })
 
-        // Crear notificación para administradores
+        // 🔥 ENVIAR AL CLIENTE VÍA WEBSOCKET
+        emitNotificationToUser(service.clientId, clientNotification)
+
+        // ✅ OBTENER ADMINISTRADORES
         const admins = await prisma.user.findMany({
             where: {
                 role: "ADMINISTRADOR",
@@ -101,25 +101,33 @@ export async function POST(request: Request) {
             },
         })
 
-        const adminNotifications = admins.map((admin) => ({
-            userId: admin.id,
-            title: "Servicio Completado",
-            message: `${session.user.name} completó el servicio para ${service.client.name}`,
-            type: "service_completed_admin",
-            data: {
-                serviceId: service.id,
-                employeeName: session.user.name,
-                clientName: service.client.name,
-            },
-        }))
+        // ✅ NOTIFICACIONES A ADMINISTRADORES
+        if (admins.length > 0) {
+            const adminNotifications = await Promise.all(
+                admins.map((admin) =>
+                    prisma.notification.create({
+                        data: {
+                            userId: admin.id,
+                            title: "Servicio Completado",
+                            message: `${session.user.name} completó el servicio para ${service.client.name}`,
+                            type: "service_completed_admin",
+                            data: {
+                                serviceId: service.id,
+                                employeeName: session.user.name,
+                                clientName: service.client.name,
+                            },
+                        },
+                    })
+                )
+            )
 
-        if (adminNotifications.length > 0) {
-            await prisma.notification.createMany({
-                data: adminNotifications,
+            // 🔥 ENVIAR A CADA ADMIN VÍA WEBSOCKET
+            adminNotifications.forEach((notification) => {
+                emitNotificationToAdmins(notification)
             })
         }
 
-        // Registrar actividad
+        // ✅ REGISTRAR ACTIVIDAD
         await prisma.activityLog.create({
             data: {
                 userId: session.user.id,

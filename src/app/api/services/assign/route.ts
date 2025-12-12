@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { emitNotificationToUser } from "@/lib/websocket/emitNotification"
 
 export async function POST(request: Request) {
     try {
@@ -82,7 +83,6 @@ export async function POST(request: Request) {
         }
 
         // Asignar el servicio al empleado
-        // Cambiar estado de PENDING a ASSIGNED
         const updatedService = await prisma.service.update({
             where: { id: serviceId },
             data: {
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
         })
 
         // Crear notificación para el empleado
-        await prisma.notification.create({
+        const employeeNotification = await prisma.notification.create({
             data: {
                 userId: employeeId,
                 title: "Nuevo Servicio Asignado",
@@ -112,8 +112,11 @@ export async function POST(request: Request) {
             },
         })
 
+        // Enviar notificación vía WebSocket
+        emitNotificationToUser(employeeId, employeeNotification)
+
         // Crear notificación para el cliente
-        await prisma.notification.create({
+        const clientNotification = await prisma.notification.create({
             data: {
                 userId: service.clientId,
                 title: "Servicio Asignado",
@@ -126,6 +129,9 @@ export async function POST(request: Request) {
                 },
             },
         })
+
+        // Enviar notificación vía WebSocket
+        emitNotificationToUser(service.clientId, clientNotification)
 
         // Registrar actividad en el log
         await prisma.activityLog.create({
