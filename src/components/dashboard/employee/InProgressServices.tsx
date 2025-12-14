@@ -10,7 +10,7 @@ interface Service {
   description: string;
   empresaContratante: string;
   municipio: string;
-  startDate: string | null;
+  startDate: Date | null;
   contactPerson: string;
   contactPhone: string;
   client: {

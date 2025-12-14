@@ -80,7 +80,12 @@ export default function ServiceDocuments({
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [requiredDocuments, setRequiredDocuments] = useState<string[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
-  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+  const [viewingDocument, setViewingDocument] = useState<{
+    id: string;
+    documentType: string;
+    completedAt: string;
+    content: any;
+  } | null>(null);
   const [showCharlModal, setShowCharlModal] = useState(false);
   const [showATSModal, setShowATSModal] = useState(false);
   const [showPermisoAlturasModal, setShowPermisoAlturasModal] = useState(false);
@@ -185,7 +190,14 @@ export default function ServiceDocuments({
   const handleViewDocument = (documentType: string) => {
     const doc = getDocument(documentType);
     if (doc && doc.completedAt) {
-      setViewingDocument(doc);
+      setViewingDocument(
+        doc as {
+          id: string;
+          documentType: string;
+          completedAt: string;
+          content: any;
+        }
+      );
     }
   };
 
@@ -194,7 +206,14 @@ export default function ServiceDocuments({
     if (doc && doc.completedAt) {
       try {
         setLoading(true);
-        await generateDocumentPDF(doc);
+        await generateDocumentPDF(
+          doc as {
+            id: string;
+            documentType: string;
+            completedAt: string;
+            content: any;
+          }
+        );
       } catch (error) {
         console.error("Error al generar PDF:", error);
         alert("Error al generar el PDF. Por favor intenta de nuevo.");

@@ -27,10 +27,10 @@ export async function generateDocumentPDF(document: Document): Promise<void> {
     let yPos = margin;
 
     // Helper para agregar texto
-    const addText = (text: string, size = 10, isBold = false, color: number[] = [0, 0, 0]) => {
+    const addText = (text: string, size = 10, isBold = false, color: [number, number, number] = [0, 0, 0]) => {
         pdf.setFontSize(size);
         pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
-        pdf.setTextColor(...color);
+        pdf.setTextColor(color[0], color[1], color[2]);
         const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
 
         // Verificar si necesitamos una nueva página

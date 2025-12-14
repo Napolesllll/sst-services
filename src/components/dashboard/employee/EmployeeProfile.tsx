@@ -12,7 +12,7 @@ interface User {
   phone: string | null;
   role: string;
   active: boolean;
-  createdAt: string;
+  createdAt: Date;
 }
 
 interface Stats {

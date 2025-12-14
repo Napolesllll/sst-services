@@ -23,8 +23,8 @@ interface Service {
   numeroTrabajadores: number;
   municipio: string;
   empresaPrestacionServicio: string;
-  fechaInicio: string;
-  fechaTerminacion: string;
+  fechaInicio: Date;
+  fechaTerminacion: Date;
   horarioEjecucion: string;
   client: {
     id: string;
@@ -82,8 +82,7 @@ const getServiceTypeName = (type: string): string => {
   return names[type] || type;
 };
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
+const formatDate = (date: Date) => {
   return date.toLocaleDateString("es-CO", {
     year: "numeric",
     month: "long",

@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 interface Document {
   id: string;
   documentType: string;
-  completedAt: string | null;
-  createdAt: string;
+  completedAt: Date | null;
+  createdAt: Date;
   service: {
     id: string;
     serviceType: string;

@@ -14,10 +14,10 @@ interface Service {
   serviceType: string;
   status: string;
   description: string;
-  address: string;
+  address: string | null;
   contactPerson: string;
   contactPhone: string;
-  suggestedDate: string;
+  suggestedDate: Date | null;
   client: {
     id: string;
     name: string;
@@ -95,8 +95,8 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
+const formatDate = (date: Date | null) => {
+  if (!date) return "No especificada";
   return date.toLocaleDateString("es-CO", {
     year: "numeric",
     month: "long",
@@ -815,7 +815,10 @@ export default function ServiceExecution({
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[
-                          { label: "Dirección", value: service.address },
+                          {
+                            label: "Dirección",
+                            value: service.address || "No especificada",
+                          },
                           {
                             label: "Fecha Sugerida",
                             value: formatDate(service.suggestedDate),

@@ -12,8 +12,8 @@ interface Service {
   empresaContratante: string;
   personaSolicita: string;
   municipio: string;
-  fechaInicio: string;
-  fechaTerminacion: string;
+  fechaInicio: Date;
+  fechaTerminacion: Date;
   contactPerson: string;
   contactPhone: string;
   client: {
@@ -48,8 +48,8 @@ const getServiceTypeName = (type: string): string => {
   return names[type] || type;
 };
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("es-CO", {
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString("es-CO", {
     year: "numeric",
     month: "long",
     day: "numeric",

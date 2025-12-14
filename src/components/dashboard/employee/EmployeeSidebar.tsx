@@ -146,11 +146,6 @@ export default function EmployeeSidebar() {
               >
                 {item.icon}
                 <span className="font-medium">{item.title}</span>
-                {item.badge && (
-                  <span className="ml-auto bg-secondary-500 text-white text-xs px-2 py-1 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
               </Link>
             </motion.div>
           );
