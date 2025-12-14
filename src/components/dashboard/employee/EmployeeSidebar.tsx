@@ -42,7 +42,6 @@ const menuItems = [
       </svg>
     ),
     href: "/dashboard/employee/assigned",
-    badge: "3",
   },
   {
     title: "En Progreso",
