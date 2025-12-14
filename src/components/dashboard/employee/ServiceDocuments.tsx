@@ -1,3 +1,6 @@
+// Actualización del archivo components/services/ServiceDocuments.tsx
+// Reemplaza la función getRequiredDocuments() existente con esta versión que usa la API
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,6 +12,8 @@ import ATSModal from "./ATSModal";
 import PermisoAlturasModal from "./PermisoAlturasModal";
 import PermisoEspaciosConfinadosModal from "./PermisoEspaciosConfinadosModal";
 import PermisoTrabajoModal from "./PermisoTrabajoModal";
+import DocumentViewerModal from "./DocumentViewerModal";
+import { generateDocumentPDF } from "@/lib/pdfGenerator";
 
 interface Document {
   id: string;
@@ -23,47 +28,6 @@ interface ServiceDocumentsProps {
   status: string;
   documents: Document[];
 }
-
-// Configuración de documentos requeridos según el tipo de servicio
-const getRequiredDocuments = (serviceType: string): string[] => {
-  // Documentos base que SIEMPRE se requieren para tareas críticas
-  const baseDocuments = ["CHARLA_SEGURIDAD", "ATS"];
-
-  // Documentos específicos según el tipo de servicio
-  const specificDocuments: { [key: string]: string[] } = {
-    COORDINADOR_ALTURAS: ["PERMISO_ALTURAS"],
-    SUPERVISOR_ESPACIOS_CONFINADOS: ["PERMISO_ESPACIOS_CONFINADOS"],
-    ANDAMIERO: ["PERMISO_ALTURAS"],
-    RESCATISTA: ["PERMISO_ALTURAS", "PERMISO_ESPACIOS_CONFINADOS"],
-    // Servicios que requieren permisos especiales
-    PROFESIONAL_SST: ["PERMISO_TRABAJO"],
-    TECNOLOGO_SST: ["PERMISO_TRABAJO"],
-    TECNICO_SST: ["PERMISO_TRABAJO"],
-    // Servicios administrativos
-    SERVICIOS_ADMINISTRATIVOS: [],
-    NOMINA: [],
-    FACTURACION: [],
-    CONTRATOS: [],
-    SEGURIDAD_SOCIAL: [],
-  };
-
-  const specific = specificDocuments[serviceType] || ["PERMISO_TRABAJO"];
-
-  // Para servicios administrativos, no incluir documentos base
-  if (
-    [
-      "SERVICIOS_ADMINISTRATIVOS",
-      "NOMINA",
-      "FACTURACION",
-      "CONTRATOS",
-      "SEGURIDAD_SOCIAL",
-    ].includes(serviceType)
-  ) {
-    return [];
-  }
-
-  return [...baseDocuments, ...specific];
-};
 
 const documentConfig: {
   [key: string]: { label: string; description: string; icon: string };
@@ -113,7 +77,10 @@ export default function ServiceDocuments({
 }: ServiceDocumentsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+  const [requiredDocuments, setRequiredDocuments] = useState<string[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
   const [showCharlModal, setShowCharlModal] = useState(false);
   const [showATSModal, setShowATSModal] = useState(false);
   const [showPermisoAlturasModal, setShowPermisoAlturasModal] = useState(false);
@@ -121,17 +88,81 @@ export default function ServiceDocuments({
     useState(false);
   const [showPermisoTrabajoModal, setShowPermisoTrabajoModal] = useState(false);
 
-  const requiredDocuments = getRequiredDocuments(serviceType);
+  // Cargar configuración de documentos requeridos desde la API
+  useEffect(() => {
+    fetchRequiredDocuments();
+  }, [serviceType]);
+
+  const fetchRequiredDocuments = async () => {
+    try {
+      setLoadingConfig(true);
+      const response = await fetch(
+        `/api/configuration/required-documents?serviceType=${serviceType}`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setRequiredDocuments(data.requiredDocuments || []);
+      } else {
+        console.error("Error loading required documents:", data.error);
+        // Fallback a documentos por defecto si falla la API
+        setRequiredDocuments(getDefaultRequiredDocuments(serviceType));
+      }
+    } catch (error) {
+      console.error("Error fetching required documents:", error);
+      setRequiredDocuments(getDefaultRequiredDocuments(serviceType));
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
+  // Fallback: Configuración por defecto (igual que antes)
+  const getDefaultRequiredDocuments = (serviceType: string): string[] => {
+    const baseDocuments = ["CHARLA_SEGURIDAD", "ATS"];
+    const specificDocuments: { [key: string]: string[] } = {
+      COORDINADOR_ALTURAS: ["PERMISO_ALTURAS"],
+      SUPERVISOR_ESPACIOS_CONFINADOS: ["PERMISO_ESPACIOS_CONFINADOS"],
+      ANDAMIERO: ["PERMISO_ALTURAS"],
+      RESCATISTA: ["PERMISO_ALTURAS", "PERMISO_ESPACIOS_CONFINADOS"],
+      PROFESIONAL_SST: ["PERMISO_TRABAJO"],
+      TECNOLOGO_SST: ["PERMISO_TRABAJO"],
+      TECNICO_SST: ["PERMISO_TRABAJO"],
+      SERVICIOS_ADMINISTRATIVOS: [],
+      NOMINA: [],
+      FACTURACION: [],
+      CONTRATOS: [],
+      SEGURIDAD_SOCIAL: [],
+    };
+
+    const specific = specificDocuments[serviceType] || ["PERMISO_TRABAJO"];
+
+    if (
+      [
+        "SERVICIOS_ADMINISTRATIVOS",
+        "NOMINA",
+        "FACTURACION",
+        "CONTRATOS",
+        "SEGURIDAD_SOCIAL",
+      ].includes(serviceType)
+    ) {
+      return [];
+    }
+
+    return [...baseDocuments, ...specific];
+  };
 
   const getDocumentStatus = (docType: string) => {
     const doc = documents.find((d) => d.documentType === docType);
     return doc ? (doc.completedAt ? "completed" : "in-progress") : "pending";
   };
 
+  const getDocument = (docType: string) => {
+    return documents.find((d) => d.documentType === docType);
+  };
+
   const handleCreateDocument = async (documentType: string) => {
     setSelectedDocument(documentType);
 
-    // Abrir modal según el tipo de documento
     if (documentType === "CHARLA_SEGURIDAD") {
       setShowCharlModal(true);
     } else if (documentType === "ATS") {
@@ -143,10 +174,33 @@ export default function ServiceDocuments({
     } else if (documentType === "PERMISO_TRABAJO") {
       setShowPermisoTrabajoModal(true);
     } else {
-      // Por ahora, alert para otros documentos
       alert(
-        `Crear documento: ${documentConfig[documentType].label} - Próximamente`
+        `Crear documento: ${
+          documentConfig[documentType]?.label || documentType
+        } - Próximamente`
       );
+    }
+  };
+
+  const handleViewDocument = (documentType: string) => {
+    const doc = getDocument(documentType);
+    if (doc && doc.completedAt) {
+      setViewingDocument(doc);
+    }
+  };
+
+  const handleDownloadPDF = async (documentType: string) => {
+    const doc = getDocument(documentType);
+    if (doc && doc.completedAt) {
+      try {
+        setLoading(true);
+        await generateDocumentPDF(doc);
+      } catch (error) {
+        console.error("Error al generar PDF:", error);
+        alert("Error al generar el PDF. Por favor intenta de nuevo.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -157,9 +211,16 @@ export default function ServiceDocuments({
     setShowPermisoEspaciosModal(false);
     setShowPermisoTrabajoModal(false);
     setSelectedDocument(null);
-    // Recargar la página para mostrar el documento completado
     router.refresh();
   };
+
+  if (loadingConfig) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
 
   if (requiredDocuments.length === 0) {
     return (
@@ -217,12 +278,12 @@ export default function ServiceDocuments({
           </svg>
           <div>
             <p className="text-sm font-semibold text-blue-400 mb-1">
-              Documentos Obligatorios Detectados
+              Documentos Obligatorios Configurados
             </p>
             <p className="text-sm text-gray-300">
-              Según el tipo de servicio ({serviceType}), se requieren{" "}
-              {requiredDocuments.length} documentos obligatorios antes de
-              iniciar el trabajo.
+              Según la configuración del sistema para {serviceType}, se
+              requieren {requiredDocuments.length} documentos obligatorios antes
+              de iniciar el trabajo.
             </p>
           </div>
         </div>
@@ -232,6 +293,13 @@ export default function ServiceDocuments({
       <div className="grid grid-cols-1 gap-4">
         {requiredDocuments.map((docType, index) => {
           const config = documentConfig[docType];
+
+          // Si no existe configuración para este tipo de documento, omitirlo
+          if (!config) {
+            console.warn(`No config found for document type: ${docType}`);
+            return null;
+          }
+
           const docStatus = getDocumentStatus(docType);
           const existingDoc = documents.find((d) => d.documentType === docType);
 
@@ -303,10 +371,55 @@ export default function ServiceDocuments({
                 <div className="flex gap-2">
                   {docStatus === "completed" ? (
                     <>
-                      <Button variant="secondary" size="sm">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleViewDocument(docType)}
+                        icon={
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                        }
+                      >
                         Ver
                       </Button>
-                      <Button variant="secondary" size="sm">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleDownloadPDF(docType)}
+                        loading={loading}
+                        icon={
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        }
+                      >
                         PDF
                       </Button>
                     </>
@@ -392,7 +505,7 @@ export default function ServiceDocuments({
         </div>
       </div>
 
-      {/* Modal de Charla de Seguridad */}
+      {/* Modales de creación */}
       {showCharlModal && (
         <CharlaSeguridadModal
           serviceId={serviceId}
@@ -401,7 +514,6 @@ export default function ServiceDocuments({
         />
       )}
 
-      {/* Modal de ATS */}
       {showATSModal && (
         <ATSModal
           serviceId={serviceId}
@@ -410,7 +522,6 @@ export default function ServiceDocuments({
         />
       )}
 
-      {/* Modal de Permiso de Alturas */}
       {showPermisoAlturasModal && (
         <PermisoAlturasModal
           serviceId={serviceId}
@@ -419,7 +530,6 @@ export default function ServiceDocuments({
         />
       )}
 
-      {/* Modal de Permiso de Espacios Confinados */}
       {showPermisoEspaciosModal && (
         <PermisoEspaciosConfinadosModal
           serviceId={serviceId}
@@ -428,12 +538,19 @@ export default function ServiceDocuments({
         />
       )}
 
-      {/* Modal de Permiso de Trabajo */}
       {showPermisoTrabajoModal && (
         <PermisoTrabajoModal
           serviceId={serviceId}
           onClose={() => setShowPermisoTrabajoModal(false)}
           onSuccess={handleDocumentSuccess}
+        />
+      )}
+
+      {/* Modal de visualización */}
+      {viewingDocument && (
+        <DocumentViewerModal
+          document={viewingDocument}
+          onClose={() => setViewingDocument(null)}
         />
       )}
     </motion.div>
