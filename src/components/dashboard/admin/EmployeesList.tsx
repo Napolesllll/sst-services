@@ -40,6 +40,16 @@ export default function EmployeesList() {
     "all" | "active" | "inactive"
   >("all");
 
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileStats, setProfileStats] = useState({
+    totalServices: 0,
+    inProgressServices: 0,
+    completedServices: 0,
+  });
+
   const [newEmployeeForm, setNewEmployeeForm] = useState<NewEmployeeForm>({
     name: "",
     email: "",
@@ -238,6 +248,32 @@ export default function EmployeesList() {
       phone: "",
       password: "",
       confirmPassword: "",
+    });
+  };
+
+  const openProfileModal = async (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setShowProfileModal(true);
+
+    // Cargar estadísticas del empleado
+    try {
+      const response = await fetch(`/api/employees/${employee.id}/stats`);
+      if (response.ok) {
+        const data = await response.json();
+        setProfileStats(data.stats);
+      }
+    } catch (error) {
+      console.error("Error loading employee stats:", error);
+    }
+  };
+
+  const closeProfileModal = () => {
+    setShowProfileModal(false);
+    setSelectedEmployee(null);
+    setProfileStats({
+      totalServices: 0,
+      inProgressServices: 0,
+      completedServices: 0,
     });
   };
 
@@ -460,7 +496,12 @@ export default function EmployeesList() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="secondary" size="sm" fullWidth>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    fullWidth
+                    onClick={() => openProfileModal(employee)}
+                  >
                     Ver Perfil
                   </Button>
                   <button
@@ -707,6 +748,349 @@ export default function EmployeesList() {
                   </Button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Perfil del Empleado */}
+      <AnimatePresence>
+        {showProfileModal && selectedEmployee && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeProfileModal}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-2xl bg-gray-900 border border-gray-700 rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto"
+            >
+              {/* Header del Perfil */}
+              <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 z-10">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl ${
+                        selectedEmployee.active
+                          ? "bg-gradient-to-br from-primary-600 to-secondary-600"
+                          : "bg-gradient-to-br from-gray-600 to-gray-700"
+                      }`}
+                    >
+                      {selectedEmployee.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">
+                        {selectedEmployee.name}
+                      </h2>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-1 ${
+                          selectedEmployee.active
+                            ? "bg-green-500/20 text-green-400 border border-green-500/50"
+                            : "bg-red-500/20 text-red-400 border border-red-500/50"
+                        }`}
+                      >
+                        {selectedEmployee.active ? "Activo" : "Inactivo"}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={closeProfileModal}
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                  >
+                    <svg
+                      className="w-6 h-6 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Contenido del Perfil */}
+              <div className="p-6 space-y-6">
+                {/* Estadísticas */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Estadísticas de Servicios
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-blue-500/20">
+                          <svg
+                            className="w-6 h-6 text-blue-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-white">
+                            {profileStats.totalServices}
+                          </p>
+                          <p className="text-xs text-gray-400">Total</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-purple-500/20">
+                          <svg
+                            className="w-6 h-6 text-purple-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-white">
+                            {profileStats.inProgressServices}
+                          </p>
+                          <p className="text-xs text-gray-400">En Progreso</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-green-500/20">
+                          <svg
+                            className="w-6 h-6 text-green-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-white">
+                            {profileStats.completedServices}
+                          </p>
+                          <p className="text-xs text-gray-400">Completados</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Información de Contacto */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Información de Contacto
+                  </h3>
+                  <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-gray-700">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-400">Email</p>
+                        <p className="text-white">{selectedEmployee.email}</p>
+                      </div>
+                      <a
+                        href={`mailto:${selectedEmployee.email}`}
+                        className="px-3 py-1 rounded-lg bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 transition-colors text-sm"
+                      >
+                        Enviar
+                      </a>
+                    </div>
+
+                    {selectedEmployee.phone && (
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-gray-700">
+                          <svg
+                            className="w-5 h-5 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-400">Teléfono</p>
+                          <p className="text-white">{selectedEmployee.phone}</p>
+                        </div>
+                        <a
+                          href={`tel:${selectedEmployee.phone}`}
+                          className="px-3 py-1 rounded-lg bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-colors text-sm"
+                        >
+                          Llamar
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Información de la Cuenta */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Información de la Cuenta
+                  </h3>
+                  <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        <div>
+                          <p className="text-xs text-gray-400">Rol</p>
+                          <p className="text-white">Empleado</p>
+                        </div>
+                      </div>
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/50">
+                        EMPLEADO
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <div>
+                          <p className="text-xs text-gray-400">Miembro desde</p>
+                          <p className="text-white">
+                            {new Date(
+                              selectedEmployee.createdAt
+                            ).toLocaleDateString("es-CO", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
+                        </svg>
+                        <div>
+                          <p className="text-xs text-gray-400">Estado</p>
+                          <p className="text-white">
+                            {selectedEmployee.active ? "Activo" : "Inactivo"}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          toggleEmployeeStatus(
+                            selectedEmployee.id,
+                            selectedEmployee.active
+                          );
+                          closeProfileModal();
+                        }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          selectedEmployee.active
+                            ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                            : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                        }`}
+                      >
+                        {selectedEmployee.active ? "Desactivar" : "Activar"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Acciones */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    onClick={closeProfileModal}
+                  >
+                    Cerrar
+                  </Button>
+                  <Button variant="primary" fullWidth>
+                    Ver Servicios Asignados
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
