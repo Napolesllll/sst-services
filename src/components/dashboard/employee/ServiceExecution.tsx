@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import Card from "@/components/ui/Card";
@@ -10,6 +10,7 @@ import ServiceInspections from "./ServiceInspections";
 import ServiceEvidence from "./ServiceEvidence";
 
 interface Service {
+  empresaPrestacionServicio: ReactNode;
   id: string;
   serviceType: string;
   status: string;
@@ -545,8 +546,12 @@ export default function ServiceExecution({
                       color: "transparent",
                     }}
                   >
-                    {getServiceTypeName(service.serviceType)}
+                    {getServiceTypeName(service.serviceType)} Servicio Para{" "}
+                    <span className="text-2xl font-bold text-blue mb-2">
+                      {service.empresaPrestacionServicio}
+                    </span>
                   </motion.h1>
+
                   {getStatusBadge(service.status)}
                 </div>
                 <motion.p

@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import { ReactNode } from "react";
 
 interface Service {
+  empresaPrestacionServicio: ReactNode;
   id: string;
   serviceType: string;
   description: string;
@@ -112,6 +114,10 @@ export default function InProgressServices({
                 <h3 className="text-xl font-bold text-white mb-2">
                   {service.empresaContratante}
                 </h3>
+                Servicio Para{" "}
+                <span className="text-2xl font-bold text-blue mb-2">
+                  {service.empresaPrestacionServicio}
+                </span>
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-purple-400 font-semibold">
                     {getServiceTypeName(service.serviceType)}

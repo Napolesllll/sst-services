@@ -1,5 +1,5 @@
-// Actualización del archivo components/services/ServiceDocuments.tsx
-// Reemplaza la función getRequiredDocuments() existente con esta versión que usa la API
+// components/services/ServiceDocuments.tsx
+// ACTUALIZADO para sistema de instancias múltiples
 
 "use client";
 
@@ -13,6 +13,7 @@ import PermisoAlturasModal from "./PermisoAlturasModal";
 import PermisoEspaciosConfinadosModal from "./PermisoEspaciosConfinadosModal";
 import PermisoTrabajoModal from "./PermisoTrabajoModal";
 import DocumentViewerModal from "./DocumentViewerModal";
+import DocumentInstancesManager from "./DocumentInstancesManager";
 import { generateDocumentPDF } from "@/lib/pdfGenerator";
 
 interface Document {
@@ -20,6 +21,8 @@ interface Document {
   documentType: string;
   completedAt: string | null;
   content: any;
+  isGroupDocument?: boolean;
+  instanceNumber?: number | null;
 }
 
 interface ServiceDocumentsProps {
@@ -27,8 +30,8 @@ interface ServiceDocumentsProps {
   serviceType: string;
   status: string;
   documents: Document[];
-  configuredDocs?: string[]; // Documentos configurados específicamente para este servicio
-  configuredInspections?: string[]; // Inspecciones configuradas específicamente para este servicio
+  configuredDocs?: string[];
+  configuredInspections?: string[];
 }
 
 const documentConfig: {
@@ -36,7 +39,7 @@ const documentConfig: {
 } = {
   CHARLA_SEGURIDAD: {
     label: "Charla de Seguridad",
-    description: "Registro de charla de seguridad pre-operacional",
+    description: "Registro de charlas de seguridad pre-operacionales",
     icon: "🗣️",
   },
   ATS: {
@@ -84,12 +87,19 @@ export default function ServiceDocuments({
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [requiredDocuments, setRequiredDocuments] = useState<string[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+
+  // Estado para gestionar instancias
+  const [managingDocument, setManagingDocument] = useState<string | null>(null);
+  const [documentInstances, setDocumentInstances] = useState<any[]>([]);
+  const [loadingInstances, setLoadingInstances] = useState(false);
+
   const [viewingDocument, setViewingDocument] = useState<{
     id: string;
     documentType: string;
     completedAt: string;
     content: any;
   } | null>(null);
+
   const [showCharlModal, setShowCharlModal] = useState(false);
   const [showATSModal, setShowATSModal] = useState(false);
   const [showPermisoAlturasModal, setShowPermisoAlturasModal] = useState(false);
@@ -97,7 +107,6 @@ export default function ServiceDocuments({
     useState(false);
   const [showPermisoTrabajoModal, setShowPermisoTrabajoModal] = useState(false);
 
-  // Cargar configuración de documentos requeridos desde la API
   useEffect(() => {
     fetchRequiredDocuments();
   }, [serviceType, configuredDocs]);
@@ -106,13 +115,11 @@ export default function ServiceDocuments({
     try {
       setLoadingConfig(true);
 
-      // Si el administrador configuró documentos específicamente para este servicio, usar esos
       if (configuredDocs && configuredDocs.length > 0) {
         setRequiredDocuments(configuredDocs);
         return;
       }
 
-      // Si no hay configuración específica, intentar obtener la configuración global del tipo de servicio
       const response = await fetch(
         `/api/configuration/required-documents?serviceType=${serviceType}`
       );
@@ -122,7 +129,6 @@ export default function ServiceDocuments({
         setRequiredDocuments(data.requiredDocuments || []);
       } else {
         console.error("Error loading required documents:", data.error);
-        // Fallback a documentos por defecto si falla la API
         setRequiredDocuments(getDefaultRequiredDocuments(serviceType));
       }
     } catch (error) {
@@ -133,7 +139,6 @@ export default function ServiceDocuments({
     }
   };
 
-  // Fallback: Configuración por defecto (igual que antes)
   const getDefaultRequiredDocuments = (serviceType: string): string[] => {
     const baseDocuments = ["CHARLA_SEGURIDAD", "ATS"];
     const specificDocuments: { [key: string]: string[] } = {
@@ -168,13 +173,82 @@ export default function ServiceDocuments({
     return [...baseDocuments, ...specific];
   };
 
-  const getDocumentStatus = (docType: string) => {
-    const doc = documents.find((d) => d.documentType === docType);
-    return doc ? (doc.completedAt ? "completed" : "in-progress") : "pending";
+  // ========== FUNCIONES PARA INSTANCIAS ==========
+
+  const getDocumentInstances = async (docType: string) => {
+    try {
+      setLoadingInstances(true);
+      const response = await fetch(
+        `/api/services/documents/instances?serviceId=${serviceId}&documentType=${docType}`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setDocumentInstances(data.instances || []);
+        return data.instances || [];
+      } else {
+        console.error("Error loading instances:", data.error);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching instances:", error);
+      return [];
+    } finally {
+      setLoadingInstances(false);
+    }
   };
 
-  const getDocument = (docType: string) => {
-    return documents.find((d) => d.documentType === docType);
+  const handleManageInstances = async (docType: string) => {
+    setManagingDocument(docType);
+    await getDocumentInstances(docType);
+  };
+
+  const handleDeleteInstance = async (instanceId: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `/api/services/documents/instances?instanceId=${instanceId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        // Recargar instancias
+        if (managingDocument) {
+          await getDocumentInstances(managingDocument);
+        }
+        router.refresh();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Error al eliminar instancia");
+      }
+    } catch (error) {
+      console.error("Error deleting instance:", error);
+      alert("Error al eliminar instancia");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDocumentStatus = (docType: string) => {
+    // Buscar el documento grupo (padre)
+    const groupDoc = documents.find(
+      (d) => d.documentType === docType && d.isGroupDocument === true
+    );
+
+    if (groupDoc && groupDoc.completedAt) {
+      return "completed";
+    }
+
+    return "pending";
+  };
+
+  const getDocumentInstanceCount = (docType: string): number => {
+    // Contar instancias (documentos hijos)
+    return documents.filter(
+      (d) => d.documentType === docType && d.isGroupDocument === false
+    ).length;
   };
 
   const handleCreateDocument = async (documentType: string) => {
@@ -199,40 +273,13 @@ export default function ServiceDocuments({
     }
   };
 
-  const handleViewDocument = (documentType: string) => {
-    const doc = getDocument(documentType);
-    if (doc && doc.completedAt) {
-      setViewingDocument(
-        doc as {
-          id: string;
-          documentType: string;
-          completedAt: string;
-          content: any;
-        }
-      );
-    }
-  };
-
-  const handleDownloadPDF = async (documentType: string) => {
-    const doc = getDocument(documentType);
-    if (doc && doc.completedAt) {
-      try {
-        setLoading(true);
-        await generateDocumentPDF(
-          doc as {
-            id: string;
-            documentType: string;
-            completedAt: string;
-            content: any;
-          }
-        );
-      } catch (error) {
-        console.error("Error al generar PDF:", error);
-        alert("Error al generar el PDF. Por favor intenta de nuevo.");
-      } finally {
-        setLoading(false);
-      }
-    }
+  const handleViewInstance = (instance: any) => {
+    setViewingDocument({
+      id: instance.id,
+      documentType: managingDocument || "",
+      completedAt: instance.completedAt,
+      content: instance.content,
+    });
   };
 
   const handleDocumentSuccess = () => {
@@ -242,6 +289,12 @@ export default function ServiceDocuments({
     setShowPermisoEspaciosModal(false);
     setShowPermisoTrabajoModal(false);
     setSelectedDocument(null);
+
+    // Si estamos gestionando instancias, recargarlas
+    if (managingDocument) {
+      getDocumentInstances(managingDocument);
+    }
+
     router.refresh();
   };
 
@@ -295,7 +348,7 @@ export default function ServiceDocuments({
       <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
         <div className="flex items-start gap-3">
           <svg
-            className="w-5 h-5 text-blue-400 mt-0.5"
+            className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -309,26 +362,12 @@ export default function ServiceDocuments({
           </svg>
           <div>
             <p className="text-sm font-semibold text-blue-400 mb-1">
-              Documentos Obligatorios{" "}
-              {configuredDocs && configuredDocs.length > 0
-                ? "Configurados"
-                : "del Sistema"}
+              Documentos con Múltiples Registros
             </p>
             <p className="text-sm text-gray-300">
-              {configuredDocs && configuredDocs.length > 0 ? (
-                <>
-                  El administrador configuró{" "}
-                  <strong>{requiredDocuments.length} documento(s)</strong>{" "}
-                  específicamente para este servicio. Debes completarlos antes
-                  de finalizar el trabajo.
-                </>
-              ) : (
-                <>
-                  Según la configuración del sistema para {serviceType}, se
-                  requieren {requiredDocuments.length} documentos obligatorios
-                  antes de iniciar el trabajo.
-                </>
-              )}
+              Puedes crear múltiples instancias de cada documento (charlas
+              diarias, análisis por tarea, permisos renovados, etc.). Haz clic
+              en "Gestionar" para ver todos los registros creados.
             </p>
           </div>
         </div>
@@ -339,14 +378,13 @@ export default function ServiceDocuments({
         {requiredDocuments.map((docType, index) => {
           const config = documentConfig[docType];
 
-          // Si no existe configuración para este tipo de documento, omitirlo
           if (!config) {
             console.warn(`No config found for document type: ${docType}`);
             return null;
           }
 
           const docStatus = getDocumentStatus(docType);
-          const existingDoc = documents.find((d) => d.documentType === docType);
+          const instanceCount = getDocumentInstanceCount(docType);
 
           return (
             <motion.div
@@ -357,8 +395,6 @@ export default function ServiceDocuments({
               className={`p-5 rounded-lg border transition-all ${
                 docStatus === "completed"
                   ? "bg-green-500/10 border-green-500/30"
-                  : docStatus === "in-progress"
-                  ? "bg-yellow-500/10 border-yellow-500/30"
                   : "bg-gray-800/50 border-gray-700 hover:border-gray-600"
               }`}
             >
@@ -377,49 +413,38 @@ export default function ServiceDocuments({
 
                   {/* Información */}
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h4 className="font-semibold text-white">
                         {config.label}
                       </h4>
                       {docStatus === "completed" && (
-                        <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full border border-green-500/50">
-                          ✓ Completado
-                        </span>
-                      )}
-                      {docStatus === "in-progress" && (
-                        <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-full border border-yellow-500/50">
-                          En progreso
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full border border-green-500/50">
+                            ✓ {instanceCount} registro
+                            {instanceCount !== 1 ? "s" : ""}
+                          </span>
+                        </div>
                       )}
                       {docStatus === "pending" && (
-                        <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-semibold rounded-full border border-red-500/50">
-                          Pendiente
+                        <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-semibold rounded-full border border-yellow-500/50">
+                          Sin registros
                         </span>
                       )}
                     </div>
                     <p className="text-sm text-gray-400">
                       {config.description}
                     </p>
-
-                    {existingDoc?.completedAt && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        Completado:{" "}
-                        {new Date(existingDoc.completedAt).toLocaleString(
-                          "es-CO"
-                        )}
-                      </p>
-                    )}
                   </div>
                 </div>
 
                 {/* Acciones */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-shrink-0">
                   {docStatus === "completed" ? (
                     <>
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => handleViewDocument(docType)}
+                        onClick={() => handleManageInstances(docType)}
                         icon={
                           <svg
                             className="w-4 h-4"
@@ -431,24 +456,18 @@ export default function ServiceDocuments({
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              d="M4 6h16M4 10h16M4 14h16M4 18h16"
                             />
                           </svg>
                         }
                       >
-                        Ver
+                        Gestionar ({instanceCount})
                       </Button>
                       <Button
-                        variant="secondary"
+                        variant="primary"
                         size="sm"
-                        onClick={() => handleDownloadPDF(docType)}
-                        loading={loading}
+                        onClick={() => handleCreateDocument(docType)}
+                        disabled={status !== "IN_PROGRESS"}
                         icon={
                           <svg
                             className="w-4 h-4"
@@ -460,12 +479,12 @@ export default function ServiceDocuments({
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                              d="M12 4v16m8-8H4"
                             />
                           </svg>
                         }
                       >
-                        PDF
+                        Nuevo
                       </Button>
                     </>
                   ) : (
@@ -475,7 +494,7 @@ export default function ServiceDocuments({
                       onClick={() => handleCreateDocument(docType)}
                       disabled={status !== "IN_PROGRESS"}
                     >
-                      {docStatus === "in-progress" ? "Continuar" : "Completar"}
+                      Crear Primer Registro
                     </Button>
                   )}
                 </div>
@@ -489,15 +508,18 @@ export default function ServiceDocuments({
       <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-400">Progreso de Documentación</p>
+            <p className="text-sm text-gray-400">Tipos de Documentos</p>
             <p className="text-2xl font-bold text-white">
               {
-                documents.filter(
-                  (d) =>
-                    d.completedAt && requiredDocuments.includes(d.documentType)
+                requiredDocuments.filter(
+                  (docType) => getDocumentStatus(docType) === "completed"
                 ).length
               }{" "}
               / {requiredDocuments.length}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Total de registros:{" "}
+              {documents.filter((d) => d.isGroupDocument === false).length}
             </p>
           </div>
           <div className="text-right">
@@ -520,10 +542,8 @@ export default function ServiceDocuments({
                   strokeWidth="8"
                   fill="transparent"
                   strokeDasharray={`${
-                    (documents.filter(
-                      (d) =>
-                        d.completedAt &&
-                        requiredDocuments.includes(d.documentType)
+                    (requiredDocuments.filter(
+                      (docType) => getDocumentStatus(docType) === "completed"
                     ).length /
                       requiredDocuments.length) *
                     352
@@ -534,10 +554,8 @@ export default function ServiceDocuments({
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-2xl font-bold text-white">
                   {Math.round(
-                    (documents.filter(
-                      (d) =>
-                        d.completedAt &&
-                        requiredDocuments.includes(d.documentType)
+                    (requiredDocuments.filter(
+                      (docType) => getDocumentStatus(docType) === "completed"
                     ).length /
                       requiredDocuments.length) *
                       100
@@ -588,6 +606,29 @@ export default function ServiceDocuments({
           serviceId={serviceId}
           onClose={() => setShowPermisoTrabajoModal(false)}
           onSuccess={handleDocumentSuccess}
+        />
+      )}
+
+      {/* Manager de instancias */}
+      {managingDocument && (
+        <DocumentInstancesManager
+          serviceId={serviceId}
+          documentType={managingDocument}
+          documentLabel={
+            documentConfig[managingDocument]?.label || managingDocument
+          }
+          instances={documentInstances}
+          onClose={() => {
+            setManagingDocument(null);
+            setDocumentInstances([]);
+            router.refresh();
+          }}
+          onCreateNew={() => {
+            setManagingDocument(null);
+            handleCreateDocument(managingDocument);
+          }}
+          onViewInstance={handleViewInstance}
+          onDeleteInstance={handleDeleteInstance}
         />
       )}
 

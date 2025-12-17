@@ -212,11 +212,114 @@ export default function ServiceRequestForm() {
     }
   };
 
+  const validateAllSteps = (): boolean => {
+    // Validar todos los pasos antes de enviar
+    for (let step = 0; step < 5; step++) {
+      setError("");
+
+      switch (step) {
+        case 0: // Información de la Empresa
+          if (!formData.empresaContratante.trim()) {
+            setError("La empresa contratante es requerida");
+            return false;
+          }
+          if (!formData.personaSolicita.trim()) {
+            setError("La persona quien solicita es requerida");
+            return false;
+          }
+          if (!formData.serviceType) {
+            setError("Debes seleccionar un tipo de servicio");
+            return false;
+          }
+          if (
+            !formData.cantidadRequerida ||
+            parseInt(formData.cantidadRequerida) <= 0
+          ) {
+            setError("La cantidad requerida debe ser mayor a 0");
+            return false;
+          }
+          break;
+
+        case 1: // Descripción del Servicio
+          if (!formData.description.trim()) {
+            setError("La descripción es requerida");
+            return false;
+          }
+          if (!formData.equiposUtilizar.trim()) {
+            setError("La descripción de equipos es requerida");
+            return false;
+          }
+          if (!formData.herramientasUtilizar.trim()) {
+            setError("La descripción de herramientas es requerida");
+            return false;
+          }
+          if (!formData.maquinasUtilizar.trim()) {
+            setError("La descripción de máquinas es requerida");
+            return false;
+          }
+          if (
+            !formData.numeroTrabajadores ||
+            parseInt(formData.numeroTrabajadores) <= 0
+          ) {
+            setError("El número de trabajadores debe ser mayor a 0");
+            return false;
+          }
+          break;
+
+        case 2: // Ubicación
+          if (!formData.municipio.trim()) {
+            setError("El municipio es requerido");
+            return false;
+          }
+          if (!formData.empresaPrestacionServicio.trim()) {
+            setError("La empresa donde se prestará el servicio es requerida");
+            return false;
+          }
+          break;
+
+        case 3: // Fechas y Horarios
+          if (!formData.fechaInicio) {
+            setError("La fecha de inicio es requerida");
+            return false;
+          }
+          if (!formData.fechaTerminacion) {
+            setError("La fecha de terminación es requerida");
+            return false;
+          }
+          const inicio = new Date(formData.fechaInicio);
+          const fin = new Date(formData.fechaTerminacion);
+          if (fin < inicio) {
+            setError(
+              "La fecha de terminación debe ser posterior a la fecha de inicio"
+            );
+            return false;
+          }
+          if (!formData.horarioEjecucion.trim()) {
+            setError("El horario de ejecución es requerido");
+            return false;
+          }
+          break;
+
+        case 4: // Información de Contacto
+          if (!formData.contactPerson.trim()) {
+            setError("El nombre del coordinador es requerido");
+            return false;
+          }
+          if (!formData.contactPhone.trim()) {
+            setError("El teléfono del coordinador es requerido");
+            return false;
+          }
+          break;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar último paso
-    if (!validateCurrentStep()) {
+    // Validar todos los pasos
+    if (!validateAllSteps()) {
       return;
     }
 

@@ -181,7 +181,17 @@ model ServiceAssignment {
   @@index([employeeId])
 }
 
-// Documentos de servicio
+// ============================================================================
+// DOCUMENTOS DE SERVICIO CON SISTEMA DE INSTANCIAS MÚLTIPLES
+// ============================================================================
+// Permite crear múltiples registros del mismo tipo de documento
+// Ejemplo: Varias charlas de seguridad por día, múltiples ATS por tarea, etc.
+// 
+// ESTRUCTURA:
+// - Documento Grupo (Padre): isGroupDocument = true, agrupa todas las instancias
+// - Instancias (Hijos): isGroupDocument = false, cada registro individual
+// ============================================================================
+
 model ServiceDocument {
   id            String       @id @default(cuid())
   serviceId     String
@@ -193,8 +203,24 @@ model ServiceDocument {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   
+  // ========== SISTEMA DE INSTANCIAS MÚLTIPLES ==========
+  
+  // Para documentos agrupadores (padre)
+  isGroupDocument Boolean   @default(false)  // true = documento contenedor, false = instancia individual
+  instances       ServiceDocument[] @relation("DocumentInstances")  // Relación a instancias hijas
+  
+  // Para instancias individuales (hijos)
+  parentDocumentId String?
+  parentDocument   ServiceDocument? @relation("DocumentInstances", fields: [parentDocumentId], references: [id], onDelete: Cascade)
+  instanceNumber   Int?              // Número secuencial de instancia (1, 2, 3, etc.)
+  
+  // ======================================================
+  
   @@index([serviceId])
   @@index([documentType])
+  @@index([parentDocumentId])
+  @@index([serviceId, documentType])
+  @@index([isGroupDocument])
 }
 
 // Inspecciones preoperacionales
