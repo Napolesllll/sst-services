@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import ServiceDetailsModal from "./ServiceDetailsModal";
 
 interface Service {
   id: string;
@@ -79,6 +80,8 @@ export default function ServicesList() {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
 
   useEffect(() => {
     fetchServices();
@@ -250,7 +253,14 @@ export default function ServicesList() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="secondary" size="sm">
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedServiceId(service.id);
+                      setIsModalOpen(true);
+                    }}
+                  >
                     Ver Detalles
                   </Button>
                   {service.status === "PENDING" && (
@@ -264,6 +274,16 @@ export default function ServicesList() {
           </div>
         )}
       </Card>
+
+      {/* Modal de detalles del servicio */}
+      <ServiceDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedServiceId("");
+        }}
+        serviceId={selectedServiceId}
+      />
     </div>
   );
 }

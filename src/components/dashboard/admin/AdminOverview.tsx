@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import ServiceDetailsModal from "@/components/dashboard/admin/ServiceDetailsModal";
 
 interface Service {
   id: string;
@@ -96,6 +97,10 @@ export default function AdminOverview() {
     completed: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchServices();
@@ -116,6 +121,16 @@ export default function AdminOverview() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewDetails = (serviceId: string) => {
+    setSelectedServiceId(serviceId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedServiceId(null);
   };
 
   if (loading) {
@@ -221,7 +236,12 @@ export default function AdminOverview() {
                   </div>
 
                   <div className="mt-3 pt-3 border-t border-gray-700 flex gap-2">
-                    <Button variant="secondary" size="sm" fullWidth>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      fullWidth
+                      onClick={() => handleViewDetails(service.id)}
+                    >
                       Ver detalles
                     </Button>
                     {service.status === "PENDING" && (
@@ -355,6 +375,15 @@ export default function AdminOverview() {
           </div>
         </Card>
       </div>
+
+      {/* Modal de Detalles */}
+      {selectedServiceId && (
+        <ServiceDetailsModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          serviceId={selectedServiceId}
+        />
+      )}
     </div>
   );
 }
