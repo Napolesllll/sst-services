@@ -23,8 +23,8 @@ interface Service {
   numeroTrabajadores: number;
   municipio: string;
   empresaPrestacionServicio: string;
-  fechaInicio: Date;
-  fechaTerminacion: Date;
+  fechaInicio: Date | null;
+  fechaTerminacion: Date | null;
   horarioEjecucion: string;
   client: {
     id: string;
@@ -82,12 +82,21 @@ const getServiceTypeName = (type: string): string => {
   return names[type] || type;
 };
 
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString("es-CO", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+const formatDate = (date: any) => {
+  if (!date) return "No especificada";
+
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    if (isNaN(dateObj.getTime())) return "No especificada";
+
+    return dateObj.toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (error) {
+    return "No especificada";
+  }
 };
 
 const Card = ({
@@ -442,9 +451,12 @@ export default function EmployeeOverview() {
                           <span className="text-cyan-400 font-semibold text-lg">
                             {getServiceTypeName(service.serviceType)}
                           </span>
+
+                          {service.empresaPrestacionServicio}
                           <span className="text-gray-400">•</span>
                           <span className="text-gray-400">
-                            {service.cantidadRequerida} requerido(s)
+                            {service.cantidadRequerida} trabajadores
+                            requerido(s)
                           </span>
                         </div>
                         <p className="text-gray-400 text-sm">

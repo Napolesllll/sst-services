@@ -13,6 +13,8 @@ interface Service {
   startDate: Date | null;
   contactPerson: string;
   contactPhone: string;
+  requiredDocs?: string[]; // Documentos configurados
+  requiredInspections?: string[]; // Inspecciones configuradas
   client: {
     name: string;
   };

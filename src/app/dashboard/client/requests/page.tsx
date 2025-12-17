@@ -20,6 +20,8 @@ interface Service {
   municipio: string;
   empresaContratante: string;
   fechaInicio: string;
+  requiredDocs?: string[]; // Documentos configurados
+  requiredInspections?: string[]; // Inspecciones configuradas
   employee: {
     id: string;
     name: string;

@@ -98,6 +98,7 @@ model User {
   servicesRequested Service[] @relation("ClientServices")
   servicesAssigned  Service[] @relation("EmployeeServices")
   createdServices   Service[] @relation("CreatedByAdmin")
+  configuredServices Service[] @relation("ConfiguredServices")
   notifications     Notification[]
   
   @@index([email])
@@ -151,6 +152,13 @@ model Service {
   inspections       ServiceInspection[]
   evidences         Evidence[]
   assignments       ServiceAssignment[]
+  
+  // Configuración específica del servicio
+  requiredDocs      String[]      @default([])  // Documentos requeridos para este servicio específico
+  requiredInspections String[]    @default([])  // Inspecciones requeridas para este servicio específico
+  configuredAt      DateTime?                   // Cuándo se configuró
+  configuredById    String?                     // Quién configuró
+  configuredBy      User?         @relation("ConfiguredServices", fields: [configuredById], references: [id])
   
   @@index([clientId])
   @@index([employeeId])

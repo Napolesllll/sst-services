@@ -15,6 +15,8 @@ interface Service {
   municipio: string;
   createdAt: string;
   fechaInicio: string;
+  requiredDocs?: string[]; // Documentos configurados
+  requiredInspections?: string[]; // Inspecciones configuradas
   client: {
     name: string;
     email: string;

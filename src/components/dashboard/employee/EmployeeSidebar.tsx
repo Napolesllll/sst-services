@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
@@ -123,10 +124,37 @@ const menuItems = [
 
 export default function EmployeeSidebar() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  return (
-    <aside className="hidden lg:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 flex-col bg-gray-900/50 backdrop-blur-xl border-r border-gray-800 overflow-y-auto">
-      <nav className="flex-1 p-4 space-y-2">
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  const MenuContent = () => (
+    <>
+      <div className="p-4 border-b border-gray-800 lg:hidden">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white">Menú del Empleado</h2>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="p-2 text-gray-400 hover:text-white"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {menuItems.map((item, index) => {
           const isActive = pathname === item.href;
           return (
@@ -138,6 +166,7 @@ export default function EmployeeSidebar() {
             >
               <Link
                 href={item.href}
+                onClick={closeMobileMenu}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                   isActive
                     ? "bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow-neon"
@@ -151,6 +180,63 @@ export default function EmployeeSidebar() {
           );
         })}
       </nav>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile Menu Button - Con color azul celeste */}
+      <button
+        onClick={() => setMobileMenuOpen(true)}
+        className="fixed bottom-6 right-6 z-50 lg:hidden p-5 bg-gradient-to-r from-cyan-400 to-sky-500 text-white rounded-full shadow-2xl shadow-cyan-400/50 hover:shadow-3xl hover:shadow-cyan-400/70 transition-all duration-300 transform hover:scale-105 active:scale-95 border-2 border-white"
+      >
+        <svg
+          className="w-7 h-7"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2.5}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Sidebar */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.aside
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="fixed left-0 top-0 h-screen w-64 z-50 lg:hidden flex flex-col bg-gray-900/95 backdrop-blur-xl border-r border-gray-800 shadow-2xl"
+          >
+            <MenuContent />
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 flex-col bg-gray-900/50 backdrop-blur-xl border-r border-gray-800 overflow-y-auto">
+        <MenuContent />
+      </aside>
+    </>
   );
 }

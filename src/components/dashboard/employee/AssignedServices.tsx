@@ -12,10 +12,12 @@ interface Service {
   empresaContratante: string;
   personaSolicita: string;
   municipio: string;
-  fechaInicio: Date;
-  fechaTerminacion: Date;
+  fechaInicio: Date | null;
+  fechaTerminacion: Date | null;
   contactPerson: string;
   contactPhone: string;
+  requiredDocs?: string[]; // Documentos configurados
+  requiredInspections?: string[]; // Inspecciones configuradas
   client: {
     id: string;
     name: string;
@@ -48,12 +50,21 @@ const getServiceTypeName = (type: string): string => {
   return names[type] || type;
 };
 
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString("es-CO", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+const formatDate = (date: any) => {
+  if (!date) return "No especificada";
+
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    if (isNaN(dateObj.getTime())) return "No especificada";
+
+    return dateObj.toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (error) {
+    return "No especificada";
+  }
 };
 
 export default function AssignedServices({

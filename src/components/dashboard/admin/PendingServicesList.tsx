@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import AssignEmployeeModal from "./AssignEmployeeModal";
+import ServiceConfigurationModal from "./ServiceConfigurationModal";
 
 interface Service {
   id: string;
@@ -65,6 +66,11 @@ export default function PendingServicesList() {
   const [error, setError] = useState("");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [suggestedDocs, setSuggestedDocs] = useState<string[]>([]);
+  const [suggestedInspections, setSuggestedInspections] = useState<string[]>(
+    []
+  );
 
   useEffect(() => {
     fetchPendingServices();
@@ -88,13 +94,50 @@ export default function PendingServicesList() {
     }
   };
 
+  const fetchSuggestedConfiguration = async (serviceType: string) => {
+    try {
+      const response = await fetch("/api/configuration/service-types");
+      const data = await response.json();
+
+      if (response.ok && data.configurations) {
+        const config = data.configurations.find(
+          (c: any) => c.serviceType === serviceType && c.active
+        );
+
+        if (config) {
+          setSuggestedDocs(config.requiredDocs || []);
+          setSuggestedInspections(config.requiredInspections || []);
+        } else {
+          setSuggestedDocs([]);
+          setSuggestedInspections([]);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching suggested configuration:", err);
+      setSuggestedDocs([]);
+      setSuggestedInspections([]);
+    }
+  };
+
   const handleAssignClick = (service: Service) => {
     setSelectedService(service);
     setShowAssignModal(true);
   };
 
+  const handleConfigClick = (service: Service) => {
+    setSelectedService(service);
+    fetchSuggestedConfiguration(service.serviceType);
+    setShowConfigModal(true);
+  };
+
   const handleAssignSuccess = () => {
     setShowAssignModal(false);
+    setSelectedService(null);
+    fetchPendingServices(); // Recargar la lista
+  };
+
+  const handleConfigSuccess = () => {
+    setShowConfigModal(false);
     setSelectedService(null);
     fetchPendingServices(); // Recargar la lista
   };
@@ -244,6 +287,33 @@ export default function PendingServicesList() {
                 >
                   Asignar Empleado
                 </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleConfigClick(service)}
+                  icon={
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  }
+                >
+                  Configurar
+                </Button>
               </div>
 
               {/* Descripción */}
@@ -385,6 +455,22 @@ export default function PendingServicesList() {
           service={selectedService}
           onClose={() => setShowAssignModal(false)}
           onSuccess={handleAssignSuccess}
+        />
+      )}
+
+      {/* Modal de Configuración */}
+      {showConfigModal && selectedService && (
+        <ServiceConfigurationModal
+          serviceId={selectedService.id}
+          serviceName={`${getServiceTypeName(selectedService.serviceType)} - ${
+            selectedService.client.name
+          }`}
+          serviceType={selectedService.serviceType}
+          suggestedDocs={suggestedDocs}
+          suggestedInspections={suggestedInspections}
+          isOpen={showConfigModal}
+          onClose={() => setShowConfigModal(false)}
+          onSuccess={handleConfigSuccess}
         />
       )}
     </>

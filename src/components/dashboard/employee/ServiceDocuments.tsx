@@ -27,6 +27,8 @@ interface ServiceDocumentsProps {
   serviceType: string;
   status: string;
   documents: Document[];
+  configuredDocs?: string[]; // Documentos configurados específicamente para este servicio
+  configuredInspections?: string[]; // Inspecciones configuradas específicamente para este servicio
 }
 
 const documentConfig: {
@@ -74,6 +76,8 @@ export default function ServiceDocuments({
   serviceType,
   status,
   documents,
+  configuredDocs = [],
+  configuredInspections = [],
 }: ServiceDocumentsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -96,11 +100,19 @@ export default function ServiceDocuments({
   // Cargar configuración de documentos requeridos desde la API
   useEffect(() => {
     fetchRequiredDocuments();
-  }, [serviceType]);
+  }, [serviceType, configuredDocs]);
 
   const fetchRequiredDocuments = async () => {
     try {
       setLoadingConfig(true);
+
+      // Si el administrador configuró documentos específicamente para este servicio, usar esos
+      if (configuredDocs && configuredDocs.length > 0) {
+        setRequiredDocuments(configuredDocs);
+        return;
+      }
+
+      // Si no hay configuración específica, intentar obtener la configuración global del tipo de servicio
       const response = await fetch(
         `/api/configuration/required-documents?serviceType=${serviceType}`
       );
@@ -297,12 +309,26 @@ export default function ServiceDocuments({
           </svg>
           <div>
             <p className="text-sm font-semibold text-blue-400 mb-1">
-              Documentos Obligatorios Configurados
+              Documentos Obligatorios{" "}
+              {configuredDocs && configuredDocs.length > 0
+                ? "Configurados"
+                : "del Sistema"}
             </p>
             <p className="text-sm text-gray-300">
-              Según la configuración del sistema para {serviceType}, se
-              requieren {requiredDocuments.length} documentos obligatorios antes
-              de iniciar el trabajo.
+              {configuredDocs && configuredDocs.length > 0 ? (
+                <>
+                  El administrador configuró{" "}
+                  <strong>{requiredDocuments.length} documento(s)</strong>{" "}
+                  específicamente para este servicio. Debes completarlos antes
+                  de finalizar el trabajo.
+                </>
+              ) : (
+                <>
+                  Según la configuración del sistema para {serviceType}, se
+                  requieren {requiredDocuments.length} documentos obligatorios
+                  antes de iniciar el trabajo.
+                </>
+              )}
             </p>
           </div>
         </div>

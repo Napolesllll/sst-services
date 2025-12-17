@@ -18,6 +18,8 @@ interface Service {
   contactPerson: string;
   contactPhone: string;
   suggestedDate: Date | null;
+  requiredDocs?: string[]; // Documentos configurados específicamente
+  requiredInspections?: string[]; // Inspecciones configuradas específicamente
   client: {
     id: string;
     name: string;
@@ -860,6 +862,8 @@ export default function ServiceExecution({
                     serviceType={service.serviceType}
                     status={service.status}
                     documents={service.documents}
+                    configuredDocs={service.requiredDocs || []}
+                    configuredInspections={service.requiredInspections || []}
                   />
                 )}
 
@@ -869,6 +873,8 @@ export default function ServiceExecution({
                     serviceType={service.serviceType}
                     status={service.status}
                     inspections={service.inspections}
+                    configuredInspections={service.requiredInspections || []}
+                    configuredDocs={service.requiredDocs || []}
                   />
                 )}
 

@@ -18,6 +18,8 @@ interface Service {
   fechaInicio: string;
   fechaTerminacion: string;
   horarioEjecucion: string;
+  requiredDocs?: string[]; // Documentos configurados
+  requiredInspections?: string[]; // Inspecciones configuradas
   employee: {
     id: string;
     name: string;

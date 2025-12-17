@@ -21,6 +21,8 @@ interface ServiceInspectionsProps {
   serviceType: string;
   status: string;
   inspections: Inspection[];
+  configuredInspections?: string[]; // Inspecciones configuradas específicamente para este servicio
+  configuredDocs?: string[]; // Documentos configurados (por consistencia)
 }
 
 // Configuración de inspecciones según el tipo de servicio
@@ -82,13 +84,19 @@ export default function ServiceInspections({
   serviceType,
   status,
   inspections,
+  configuredInspections = [],
+  configuredDocs = [],
 }: ServiceInspectionsProps) {
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(
     null
   );
   const [viewMode, setViewMode] = useState<"selector" | "list">("selector");
 
-  const requiredInspections = getRequiredInspections(serviceType);
+  // Si el administrador configuró inspecciones específicamente, usar esas; si no, usar configuración global
+  const requiredInspections =
+    configuredInspections && configuredInspections.length > 0
+      ? configuredInspections
+      : getRequiredInspections(serviceType);
 
   // Obtener tipos de inspecciones completadas
   const completedInspections = inspections
