@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
+import { processWordFile } from "@/lib/wordProcessor";
 
 export async function POST(request: Request) {
     try {
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
         const file = formData.get("file") as File;
         const instanceId = formData.get("instanceId") as string;
         const documentType = formData.get("documentType") as string;
+        const isTemplate = formData.get("isTemplate") === "true"; // Flag para guardar como template
 
         if (!file || !instanceId || !documentType) {
             return NextResponse.json(
@@ -57,7 +59,9 @@ export async function POST(request: Request) {
         // Generar nombre único para el archivo
         const timestamp = Date.now();
         const ext = file.name.substring(file.name.lastIndexOf("."));
-        const fileName = `${documentType}_${instanceId}_${timestamp}${ext}`;
+        const fileName = isTemplate
+            ? `template_${documentType}${ext}`
+            : `${documentType}_${instanceId}_${timestamp}${ext}`;
         const filePath = join(uploadsDir, fileName);
 
         // Guardar archivo
@@ -65,16 +69,66 @@ export async function POST(request: Request) {
         const buffer = Buffer.from(bytes);
         await writeFile(filePath, buffer);
 
-        // Guardar referencia en base de datos
         const fileUrl = `/uploads/documents/${fileName}`;
 
-        // Actualizar el documento con la URL del archivo
+        // Si es plantilla, guardarla en la base de datos
+        if (isTemplate) {
+            // Eliminar plantilla anterior si existe
+            await prisma.documentTemplate.deleteMany({
+                where: { documentType: documentType as any },
+            });
+
+            // Crear nueva plantilla
+            await prisma.documentTemplate.create({
+                data: {
+                    documentType: documentType as any,
+                    templatePath: filePath,
+                    templateName: file.name,
+                    uploadedBy: session.user.id,
+                },
+            });
+
+            return NextResponse.json({
+                message: "Plantilla guardada exitosamente",
+                fileUrl,
+                fileName,
+                isTemplate: true,
+            });
+        }
+
+        // Si no es plantilla, procesar y actualizar documento
+        let extractedData = {};
+        if (
+            file.type ===
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+            file.type === "application/msword"
+        ) {
+            try {
+                extractedData = await processWordFile(buffer, documentType);
+            } catch (error) {
+                console.error("Error processing Word file:", error);
+            }
+        }
+
+        const updateData: any = {
+            fileUrl,
+            updatedAt: new Date(),
+        };
+
+        if (Object.keys(extractedData).length > 0) {
+            const currentDoc = await prisma.serviceDocument.findUnique({
+                where: { id: instanceId },
+                select: { content: true },
+            });
+            updateData.content = {
+                ...(currentDoc?.content as any || {}),
+                ...extractedData,
+            };
+        }
+
         await prisma.serviceDocument.update({
             where: { id: instanceId },
-            data: {
-                fileUrl,
-                updatedAt: new Date(),
-            },
+            data: updateData,
         });
 
         // Registrar actividad
@@ -96,6 +150,7 @@ export async function POST(request: Request) {
             message: "Archivo subido exitosamente",
             fileUrl,
             fileName,
+            extractedData: Object.keys(extractedData).length > 0 ? extractedData : null,
         });
     } catch (error) {
         console.error("Error uploading file:", error);

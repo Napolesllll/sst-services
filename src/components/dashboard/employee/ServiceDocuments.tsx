@@ -91,6 +91,7 @@ export default function ServiceDocuments({
   // Estado para gestionar instancias
   const [managingDocument, setManagingDocument] = useState<string | null>(null);
   const [documentInstances, setDocumentInstances] = useState<any[]>([]);
+  const [groupDocumentId, setGroupDocumentId] = useState<string>("");
   const [loadingInstances, setLoadingInstances] = useState(false);
 
   const [viewingDocument, setViewingDocument] = useState<{
@@ -185,6 +186,10 @@ export default function ServiceDocuments({
 
       if (response.ok) {
         setDocumentInstances(data.instances || []);
+        // Capturar el groupDocumentId si existe
+        if (data.groupDocumentId) {
+          setGroupDocumentId(data.groupDocumentId);
+        }
         return data.instances || [];
       } else {
         console.error("Error loading instances:", data.error);
@@ -618,9 +623,11 @@ export default function ServiceDocuments({
             documentConfig[managingDocument]?.label || managingDocument
           }
           instances={documentInstances}
+          groupDocumentId={groupDocumentId}
           onClose={() => {
             setManagingDocument(null);
             setDocumentInstances([]);
+            setGroupDocumentId("");
             router.refresh();
           }}
           onCreateNew={() => {

@@ -253,8 +253,8 @@ export default function ServicesList() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button 
-                    variant="secondary" 
+                  <Button
+                    variant="secondary"
                     size="sm"
                     onClick={() => {
                       setSelectedServiceId(service.id);

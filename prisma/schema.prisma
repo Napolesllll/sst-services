@@ -100,6 +100,7 @@ model User {
   createdServices   Service[] @relation("CreatedByAdmin")
   configuredServices Service[] @relation("ConfiguredServices")
   notifications     Notification[]
+  documentTemplates DocumentTemplate[]
   
   @@index([email])
   @@index([role])
@@ -179,6 +180,24 @@ model ServiceAssignment {
   @@unique([serviceId, employeeId])
   @@index([serviceId])
   @@index([employeeId])
+}
+
+// ============================================================================
+// PLANTILLAS DE DOCUMENTOS
+// ============================================================================
+// Almacena los templates de Word/PDF para cada tipo de documento
+// Cuando se sube un archivo, se guarda como plantilla maestra
+model DocumentTemplate {
+  id              String       @id @default(cuid())
+  documentType    DocumentType @unique
+  templatePath    String       // Ruta al archivo template (Word/PDF)
+  templateName    String       // Nombre del archivo original
+  uploadedBy      String
+  user            User         @relation(fields: [uploadedBy], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([documentType])
 }
 
 // ============================================================================

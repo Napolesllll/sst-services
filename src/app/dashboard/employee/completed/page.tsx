@@ -11,7 +11,7 @@ export default async function CompletedPage() {
   }
 
   // Obtener servicios COMPLETADOS
-  const services = await prisma.service.findMany({
+  const servicesRaw = await prisma.service.findMany({
     where: {
       employeeId: session.user.id,
       status: "COMPLETED",
@@ -33,6 +33,12 @@ export default async function CompletedPage() {
     take: 50, // Limitar a los últimos 50
   });
 
+  // Serializar fechas
+  const services = servicesRaw.map((s) => ({
+    ...s,
+    completedAt: s.completedAt?.toISOString() || null,
+  }));
+
   return (
     <div className="space-y-6">
       <div className="mb-8">
@@ -44,7 +50,7 @@ export default async function CompletedPage() {
         </p>
       </div>
 
-      <CompletedServices services={services} />
+      <CompletedServices services={services as any} />
     </div>
   );
 }

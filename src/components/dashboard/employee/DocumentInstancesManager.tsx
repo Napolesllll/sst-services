@@ -18,6 +18,7 @@ interface DocumentInstancesManagerProps {
   documentType: string;
   documentLabel: string;
   instances: DocumentInstance[];
+  groupDocumentId: string; // Agregado
   onClose: () => void;
   onCreateNew: () => void;
   onViewInstance: (instance: DocumentInstance) => void;
@@ -29,6 +30,7 @@ export default function DocumentInstancesManager({
   documentType,
   documentLabel,
   instances,
+  groupDocumentId,
   onClose,
   onCreateNew,
   onViewInstance,
@@ -58,22 +60,23 @@ export default function DocumentInstancesManager({
     }
   };
 
-  const handleGeneratePDF = async (instance: DocumentInstance) => {
+  const handleGeneratePDF = async () => {
     try {
-      setGeneratingPDF(instance.id);
-      const response = await fetch("/api/services/documents/generate-pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          instanceId: instance.id,
-          documentType,
-          content: instance.content,
-          completedAt: instance.completedAt,
-          documentLabel,
-        }),
-      });
+      setGeneratingPDF("consolidado");
+      const response = await fetch(
+        "/api/services/documents/generate-pdf-from-template",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            groupDocumentId,
+            documentType,
+            documentLabel,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Error al generar PDF");
@@ -83,8 +86,8 @@ export default function DocumentInstancesManager({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${documentLabel}_#${instance.instanceNumber}_${
-        new Date(instance.completedAt).toISOString().split("T")[0]
+      a.download = `${documentLabel}_CONSOLIDADO_${
+        new Date().toISOString().split("T")[0]
       }.pdf`;
       document.body.appendChild(a);
       a.click();
@@ -122,7 +125,24 @@ export default function DocumentInstancesManager({
           throw new Error("Error al subir archivo");
         }
 
-        alert("Archivo subido exitosamente");
+        const result = await response.json();
+
+        // Mostrar mensaje personalizado
+        if (result.extractedData) {
+          alert(
+            `Archivo subido exitosamente!\n\nDatos extraídos del documento:\n${Object.entries(
+              result.extractedData
+            )
+              .slice(0, 3)
+              .map(([key, value]) => `• ${key}`)
+              .join("\n")}`
+          );
+        } else {
+          alert("Archivo subido exitosamente");
+        }
+
+        // Recargar datos
+        window.location.reload();
       } catch (error) {
         console.error("Error uploading file:", error);
         alert("Error al subir el archivo");
@@ -186,7 +206,7 @@ export default function DocumentInstancesManager({
 
           {/* Stats */}
           <div className="p-6 bg-gray-800/50 border-b border-gray-700">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center">
                 <p className="text-3xl font-bold text-primary-400">
                   {instances.length}
@@ -206,6 +226,46 @@ export default function DocumentInstancesManager({
                 <p className="text-sm text-gray-400 mt-1">Última instancia</p>
               </div>
             </div>
+
+            {/* Botón para descargar PDF consolidado */}
+            <button
+              onClick={() => handleGeneratePDF()}
+              disabled={
+                generatingPDF === "consolidado" || instances.length === 0
+              }
+              className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              title="Descargar PDF consolidado con todos los registros"
+            >
+              {generatingPDF === "consolidado" ? (
+                <>
+                  <svg
+                    className="w-5 h-5 animate-spin"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <circle cx="10" cy="10" r="8" fill="none" strokeWidth="3" />
+                  </svg>
+                  Generando PDF...
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  📥 Descargar PDF Consolidado ({instances.length} registros)
+                </>
+              )}
+            </button>
           </div>
 
           {/* Content - Lista de instancias */}
@@ -312,43 +372,6 @@ export default function DocumentInstancesManager({
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                             />
                           </svg>
-                        </button>
-
-                        <button
-                          onClick={() => handleGeneratePDF(instance)}
-                          disabled={generatingPDF === instance.id}
-                          className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors disabled:opacity-50"
-                          title="Descargar como PDF"
-                        >
-                          {generatingPDF === instance.id ? (
-                            <svg
-                              className="w-5 h-5 animate-spin"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <circle
-                                cx="10"
-                                cy="10"
-                                r="8"
-                                fill="none"
-                                strokeWidth="3"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
-                          )}
                         </button>
 
                         <button

@@ -129,7 +129,7 @@ export async function DELETE(request: NextRequest) {
 
         await prisma.serviceConfiguration.delete({
             where: {
-                serviceType: serviceType,
+                serviceType: serviceType as any,
             },
         });
 
