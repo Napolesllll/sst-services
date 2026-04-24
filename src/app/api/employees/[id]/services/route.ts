@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -24,7 +24,7 @@ export async function GET(
       );
     }
 
-    const employeeId = params.id;
+    const { id: employeeId } = await params;
 
     // Obtener todos los servicios asignados al empleado
     const services = await prisma.service.findMany({
