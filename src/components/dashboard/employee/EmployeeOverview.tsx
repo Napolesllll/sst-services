@@ -446,8 +446,8 @@ export default function EmployeeOverview() {
                         >
                           {service.empresaContratante}
                         </motion.h3>
-                        Servicio Para{" "}
-                        <span className="text-2xl font-bold text-blue mb-2">
+                        <span className="text-white">Servicio Para :</span>{" "}
+                        <span className="text-2xl font-bold text-cyan-400 mb-2">
                           {service.empresaPrestacionServicio}
                         </span>
                         <div className="flex items-center gap-3 mb-2">
