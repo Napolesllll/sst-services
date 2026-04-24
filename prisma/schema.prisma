@@ -91,6 +91,7 @@ model User {
   phone         String?
   role          UserRole
   active        Boolean   @default(true)
+  profileImage  String?   // URL de la foto de perfil
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   

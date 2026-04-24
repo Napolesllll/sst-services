@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SST Services - Diagramas del Proyecto</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tabs button {
+            padding: 12px 20px;
+            border: none;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tabs button:hover,
+        .nav-tabs button.active {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .diagram-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+        }
+        
+        .diagram-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .diagram-container h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .diagram-container p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 800px;
+            transform-origin: top center;
+            transition: transform 0.2s ease;
+        }
+        
+        .mermaid.zoom-1 {
+            transform: scale(1) translate(0, 0);
+        }
+        
+        .mermaid.zoom-1-25 {
+            transform: scale(1.25) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-1-5 {
+            transform: scale(1.5) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-1-75 {
+            transform: scale(1.75) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-2 {
+            transform: scale(2) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-2-25 {
+            transform: scale(2.25) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-2-5 {
+            transform: scale(2.5) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-2-75 {
+            transform: scale(2.75) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-3 {
+            transform: scale(3) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-3-25 {
+            transform: scale(3.25) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-3-5 {
+            transform: scale(3.5) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .mermaid.zoom-4 {
+            transform: scale(4) translate(var(--pan-x, 0), var(--pan-y, 0));
+        }
+        
+        .zoom-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: start;
+        }
+        
+        .zoom-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .zoom-section label {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 0.9em;
+            min-width: 60px;
+        }
+        
+        .zoom-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .pan-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .pan-section label {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+        
+        .pan-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        
+        .zoom-controls button {
+            padding: 8px 12px;
+            border: none;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 0.85em;
+            min-width: 38px;
+        }
+        
+        .zoom-controls button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        
+        .zoom-controls button:active {
+            transform: translateY(0);
+        }
+        
+        .zoom-value {
+            color: #666;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+            padding: 6px;
+            background: white;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+        
+        .reset-btn {
+            background: #6c757d !important;
+        }
+        
+        .reset-btn:hover {
+            background: #5a6268 !important;
+        }
+        
+        .pan-btn {
+            width: 36px;
+            height: 36px;
+            padding: 5px;
+            font-size: 0.8em;
+        }
+        
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .info-box strong {
+            color: #667eea;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        .grid-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .info-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-card h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .info-card p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 SST SERVICES - Diagramas del Proyecto</h1>
+            <p>Plataforma integral de gestión de servicios de Seguridad y Salud en el Trabajo (SST). 
+            Visualiza la arquitectura, funcionalidades y flujos de la aplicación.</p>
+            
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="showDiagram(0)">1. Funcionalidades</button>
+                <button class="tab-btn" onclick="showDiagram(1)">2. Ciclo de Vida</button>
+                <button class="tab-btn" onclick="showDiagram(2)">3. APIs</button>
+                <button class="tab-btn" onclick="showDiagram(3)">4. Documentos</button>
+                <button class="tab-btn" onclick="showDiagram(4)">5. Notificaciones</button>
+                <button class="tab-btn" onclick="showDiagram(5)">6. Frontend</button>
+                <button class="tab-btn" onclick="showDiagram(6)">7. Full-Stack</button>
+                <button class="tab-btn" onclick="showDiagram(7)">8. Casos de Uso</button>
+            </div>
+        </div>
+        
+        <!-- DIAGRAMA 1: Funcionalidades -->
+        <div class="diagram-container active" id="diagram-0">
+            <h2>📋 Menú de Funcionalidades por Rol</h2>
+            <p>Visualiza las funcionalidades disponibles para cada rol de usuario: Admin, Cliente y Empleado.</p>
+            <div class="zoom-controls">
+                <div class="zoom-section">
+                    <label>🔍 Zoom:</label>
+                    <div class="zoom-buttons">
+                        <button onclick="zoomOut(0)">➖</button>
+                        <span class="zoom-value" id="zoom-0">100%</span>
+                        <button onclick="zoomIn(0)">➕</button>
+                        <button class="reset-btn" onclick="resetZoom(0)">↺</button>
+                    </div>
+                </div>
+                <div class="pan-section">
+                    <label>🎯 Mover Diagrama:</label>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panUp(0)">⬆️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panLeft(0)">⬅️</button>
+                        <button class="pan-btn reset-btn" onclick="resetPan(0)" style="width: 60px;">Centro</button>
+                        <button class="pan-btn" onclick="panRight(0)">➡️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panDown(0)">⬇️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mermaid zoom-1" id="mermaid-0">
+graph TB
+    subgraph Admin["👑 ADMIN - PANEL DE ADMINISTRACIÓN"]
+        A1["📋 Dashboard Principal"]
+        A2["📊 Ver Estadísticas<br/>• Servicios completados<br/>• Ingresos<br/>• Eficiencia"]
+        A3["👥 Gestión de Clientes<br/>• Crear/Editar<br/>• Ver historial<br/>• Contacto directo"]
+        A4["👨‍💼 Gestión de Empleados<br/>• Crear/Editar/Desactivar<br/>• Asignar servicios<br/>• Ver disponibilidad<br/>• Evaluar desempeño"]
+        A5["📑 Gestión de Servicios<br/>• Ver todas solicitudes<br/>• Estado PENDING<br/>• Asignar múltiples empleados<br/>• Cancelar/Reabrir"]
+        A6["⚙️ Configuración<br/>• Tipos de servicio<br/>• Documentos obligatorios<br/>• Inspecciones requeridas<br/>• Plantillas de documentos"]
+        A7["📤 Cargar Plantillas<br/>• Word DOCX<br/>• PDF<br/>• Por tipo de documento"]
+        A8["📈 Reportes y Análisis<br/>• Servicios completados<br/>• Métricas de empleados<br/>• Documentación generada<br/>• Exportar datos"]
+        A9["🔔 Sistema de Notificaciones<br/>• Ver todas notificaciones<br/>• Notificaciones en tiempo real<br/>• Historial de eventos"]
+    end
+
+    subgraph Client["🧑‍💼 CLIENTE - PORTAL DE SOLICITUDES"]
+        C1["📋 Dashboard<br/>Resumen de actividad"]
+        C2["➕ Nueva Solicitud<br/>• Tipo de servicio<br/>• Descripción<br/>• Fecha requerida<br/>• Equipos/Herramientas<br/>• Número de trabajadores<br/>• Ubicación/Municipio"]
+        C3["📜 Ver Mis Solicitudes<br/>• Filtrar por estado<br/>• Ver detalles<br/>• Historial completo<br/>• Download PDF"]
+        C4["⏳ En Progreso<br/>• Ver asignado a quién<br/>• Tracking tiempo real<br/>• Contactar empleado<br/>• Ver documentos cargados"]
+        C5["📁 Descargar Documentos<br/>• Reporte final PDF<br/>• Documentos firmados<br/>• Evidencias fotográficas<br/>• Inspecciones completadas"]
+        C6["✅ Historial<br/>• Servicios completados<br/>• Archivos de cada servicio<br/>• Búsqueda avanzada"]
+        C7["👤 Mi Perfil<br/>• Ver datos<br/>• Cambiar contraseña<br/>• Contacto<br/>• Historial de llamadas"]
+    end
+
+    subgraph Employee["👨‍🔧 EMPLEADO - ÁREA DE TRABAJO"]
+        E1["📋 Dashboard<br/>Servicios pendientes"]
+        E2["📌 Servicios Asignados<br/>• Ver lista<br/>• Detalles de trabajo<br/>• Cliente a contactar<br/>• Documentos requeridos<br/>• Inspecciones requeridas"]
+        E3["▶️ Iniciar Servicio<br/>• Status: IN_PROGRESS<br/>• Hora de inicio<br/>• Ubicación confirmada"]
+        E4["📝 Cargar Documentos<br/>• Rellenar formularios<br/>• Instancias múltiples<br/>• Generar PDFs<br/>• Subir archivos"]
+        E5["✔️ Completar Inspecciones<br/>• Checklists preoperacionales<br/>• Arnés/Escalera/Andamio<br/>• Equipos de seguridad<br/>• Pasar/Fallar<br/>• Observaciones"]
+        E6["📸 Subir Evidencias<br/>• Fotos de trabajo<br/>• Firmas digitales<br/>• Ubicación GPS<br/>• Documentos adicionales"]
+        E7["✅ Completar Servicio<br/>• Review final<br/>• Confirmación<br/>• Status: COMPLETED<br/>• Notificación a cliente"]
+        E8["📂 Mis Documentos<br/>• Ver documentos cargados<br/>• Instancias creadas<br/>• PDFs generados<br/>• Descargar copia"]
+        E9["📊 Mis Servicios<br/>• En progreso<br/>• Completados<br/>• Estadísticas personales"]
+        E10["👤 Mi Perfil<br/>• Ver disponibilidad<br/>• Cambiar contraseña<br/>• Ver especialidades"]
+    end
+
+    subgraph Auth["🔐 AUTENTICACIÓN Y ACCESO"]
+        Auth1["🔑 Login<br/>• Email<br/>• Contraseña<br/>• JWT Token"]
+        Auth2["📝 Registro<br/>• Solo Admin puede crear<br/>• Asignar rol<br/>• Email + Contraseña"]
+        Auth3["🔄 Control de Sesión<br/>• NextAuth JWT<br/>• Validación en middleware<br/>• Refresh auto"]
+    end
+
+    A1 --> A2
+    A1 --> A3
+    A1 --> A4
+    A1 --> A5
+    A1 --> A6
+    A1 --> A7
+    A1 --> A8
+    A1 --> A9
+    
+    C1 --> C2
+    C1 --> C3
+    C1 --> C4
+    C1 --> C5
+    C1 --> C6
+    C1 --> C7
+    
+    E1 --> E2
+    E1 --> E4
+    E1 --> E5
+    E1 --> E8
+    E1 --> E9
+    E1 --> E10
+    
+    E2 --> E3
+    E3 --> E4
+    E4 --> E5
+    E5 --> E6
+    E6 --> E7
+    
+    Auth1 -.->|Admin| A1
+    Auth1 -.->|Cliente| C1
+    Auth1 -.->|Empleado| E1
+            </div>
+            </div>
+            <div class="info-box">
+                <strong>📌 Nota:</strong> En cada rol hay funcionalidades especializadas que se adaptan a su función específica en el sistema.
+            </div>
+        </div>
+        
+        <!-- DIAGRAMA 2: Ciclo de Vida -->
+        <div class="diagram-container" id="diagram-1">
+            <h2>🔄 Flujo Completo de Ciclo de Vida de Servicio</h2>
+            <p>Visualiza las 5 fases principales por las que atraviesa un servicio desde su solicitud hasta su finalización.</p>
+            <div class="zoom-controls">
+                <div class="zoom-section">
+                    <label>🔍 Zoom:</label>
+                    <div class="zoom-buttons">
+                        <button onclick="zoomOut(1)">➖</button>
+                        <span class="zoom-value" id="zoom-1">100%</span>
+                        <button onclick="zoomIn(1)">➕</button>
+                        <button class="reset-btn" onclick="resetZoom(1)">↺</button>
+                    </div>
+                </div>
+                <div class="pan-section">
+                    <label>🎯 Mover Diagrama:</label>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panUp(1)">⬆️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panLeft(1)">⬅️</button>
+                        <button class="pan-btn reset-btn" onclick="resetPan(1)" style="width: 60px;">Centro</button>
+                        <button class="pan-btn" onclick="panRight(1)">➡️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panDown(1)">⬇️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mermaid zoom-1" id="mermaid-1">
+sequenceDiagram
+    participant C as 🧑 Cliente
+    participant A as 👑 Admin
+    participant E as 👨‍🔧 Empleado
+    participant DB as 💾 BD
+
+    rect rgb(200, 220, 255)
+    Note over C,DB: ① SOLICITUD
+    C->>DB: Formulario (18 campos)
+    DB-->>DB: status = PENDING
+    DB->>A: 📢 Notificación
+    end
+
+    rect rgb(255, 230, 200)
+    Note over A,DB: ② ASIGNACIÓN
+    A->>DB: Busca Pendientes
+    A->>DB: Asigna Empleado/s
+    DB-->>DB: status = ASSIGNED
+    DB->>E: 📢 Notificación
+    end
+
+    rect rgb(200, 255, 200)
+    Note over E,DB: ③ EJECUCIÓN
+    E->>DB: Inicia Servicio
+    DB-->>DB: status = IN_PROGRESS
+    E->>DB: Carga Documentos
+    E->>DB: Inspecciones
+    E->>DB: Evidencias (fotos/GPS)
+    end
+
+    rect rgb(255, 200, 200)
+    Note over E,DB: ④ FINALIZACIÓN
+    E->>DB: Completa Servicio
+    DB-->>DB: status = COMPLETED
+    DB->>DB: Genera PDF Final
+    DB->>C: 📢 Notificación
+    DB->>A: 📢 Notificación
+    end
+
+    rect rgb(240, 240, 255)
+    Note over C,DB: ⑤ DESCARGA
+    C->>DB: Descarga Reporte
+    DB-->>C: 📄 PDF Completo
+    end
+            </div>
+            </div>
+            <div class="grid-info">
+                <div class="info-card">
+                    <h4>⏱️ Tiempos Típicos</h4>
+                    <p>Solicitud: 5 min<br/>Asignación: 1 hora<br/>Ejecución: 1-8 horas<br/>Total: Mismo día</p>
+                </div>
+                <div class="info-card">
+                    <h4>📊 Estados del Servicio</h4>
+                    <p>PENDING → ASSIGNED → IN_PROGRESS → COMPLETED o CANCELLED</p>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <!-- DIAGRAMA 3: APIs -->
+        <div class="diagram-container" id="diagram-2">
+            <h2>🔌 Arquitectura de APIs y Módulos Funcionales</h2>
+            <p>Todos los endpoints REST disponibles en la API, organizados por funcionalidad.</p>
+            <div class="zoom-controls">
+                <div class="zoom-section">
+                    <label>🔍 Zoom:</label>
+                    <div class="zoom-buttons">
+                        <button onclick="zoomOut(2)">➖</button>
+                        <span class="zoom-value" id="zoom-2">100%</span>
+                        <button onclick="zoomIn(2)">➕</button>
+                        <button class="reset-btn" onclick="resetZoom(2)">↺</button>
+                    </div>
+                </div>
+                <div class="pan-section">
+                    <label>🎯 Mover Diagrama:</label>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panUp(2)">⬆️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panLeft(2)">⬅️</button>
+                        <button class="pan-btn reset-btn" onclick="resetPan(2)" style="width: 60px;">Centro</button>
+                        <button class="pan-btn" onclick="panRight(2)">➡️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panDown(2)">⬇️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mermaid zoom-1" id="mermaid-2">
+graph TB
+    subgraph API["🔌 API REST ENDPOINTS"]
+        direction LR
+        
+        subgraph Auth_API["AUTENTICACIÓN"]
+            AU1["POST /api/auth/login"]
+            AU2["POST /api/auth/register"]
+            AU3["POST /api/auth/logout"]
+        end
+        
+        subgraph Service_API["SERVICIOS"]
+            S1["POST /api/services/request<br/>Nueva solicitud"]
+            S2["GET /api/services/[id]<br/>Detalles"]
+            S3["PUT /api/services/[id]<br/>Actualizar"]
+            S4["POST /api/services/assign<br/>Asignar empleado"]
+            S5["POST /api/services/start<br/>Iniciar"]
+            S6["POST /api/services/complete<br/>Completar"]
+            S7["GET /api/services/my-services<br/>Mis servicios"]
+        end
+        
+        subgraph Document_API["DOCUMENTOS"]
+            D1["POST /api/services/documents<br/>Subir documento"]
+            D2["GET /api/services/documents<br/>Listar documentos"]
+            D3["POST /api/configuration/templates<br/>Cargar plantilla"]
+            D4["GET /api/configuration/templates<br/>Listar plantillas"]
+        end
+        
+        subgraph Inspection_API["INSPECCIONES"]
+            I1["POST /api/services/inspections<br/>Crear inspección"]
+            I2["GET /api/services/inspections<br/>Listar inspecciones"]
+            I3["PUT /api/services/inspections<br/>Actualizar checklist"]
+        end
+        
+        subgraph Employee_API["EMPLEADOS"]
+            E1["GET /api/employees/all<br/>Listar empleados"]
+            E2["GET /api/employees/available<br/>Disponibles"]
+            E3["GET /api/employees/[id]<br/>Perfil empleado"]
+        end
+        
+        subgraph Config_API["CONFIGURACIÓN"]
+            C1["GET /api/configuration/service-types<br/>Tipos de servicio"]
+            C2["GET /api/configuration/required-documents<br/>Documentos obligatorios"]
+            C3["POST /api/configuration<br/>Configurar tipo"]
+        end
+        
+        subgraph Notification_API["NOTIFICACIONES"]
+            N1["WS: /api/notifications/ws<br/>Socket.io Connection"]
+            N2["GET /api/notifications<br/>Historial"]
+            N3["POST /api/notifications/[id]/mark-read<br/>Marcar leído"]
+        end
+        
+        subgraph User_API["USUARIOS"]
+            U1["POST /api/users/register-employee<br/>Crear empleado"]
+            U2["GET /api/users/profile<br/>Mi perfil"]
+            U3["POST /api/users/change-password<br/>Cambiar contraseña"]
+        end
+    end
+    
+    subgraph Business["💼 LÓGICA EMPRESARIAL"]
+        B1["pdfGenerator.ts<br/>Generación de PDFs"]
+        B2["serviceDocuments.ts<br/>Gestión de documentos"]
+        B3["wordProcessor.ts<br/>Procesamiento Word"]
+        B4["notificationSound.ts<br/>Alertas de audio"]
+        B5["emitNotification.ts<br/>Envío de eventos"]
+    end
+    
+    subgraph Data["📊 CAPA DE DATOS"]
+        DB["PostgreSQL Database"]
+        ORM["Prisma Client"]
+    end
+    
+    subgraph Features["⚡ CARACTERÍSTICAS"]
+        F1["🔐 JWT Authentication<br/>NextAuth 5.0-beta"]
+        F2["🔌 WebSocket Real-Time<br/>Socket.io"]
+        F3["📄 Generación PDF<br/>jsPDF + AutoTable"]
+        F4["📝 Procesamiento Word<br/>Mammoth + docx-parser"]
+        F5["🔊 Notificaciones Audio<br/>Sonidos personalizados"]
+        F6["⏳ Auditoría<br/>ActivityLog completo"]
+    end
+    
+    AU1 --> ORM
+    S1 --> ORM
+    D1 --> B2
+    I1 --> ORM
+    E1 --> ORM
+    C1 --> ORM
+    N1 --> B5
+    U1 --> ORM
+    
+    ORM --> DB
+    
+    B1 --> F3
+    B3 --> F4
+    
+    Service_API -.-> F1
+    Notification_API -.-> F2
+    Document_API -.-> F3
+            </div>
+            </div>
+            <div class="info-box">
+                <strong>✨ Total de Endpoints:</strong> 28+ endpoints REST + 1 WebSocket para comunicación real-time
+            </div>
+        </div>
+        
+        <!-- DIAGRAMA 4: Documentos -->
+        <div class="diagram-container" id="diagram-3">
+            <h2>📄 Sistema de Documentos, Inspecciones y Evidencias</h2>
+            <p>Visualiza el flujo completo de documentos, inspecciones preoperacionales y recopilación de evidencias.</p>
+            <div class="zoom-controls">
+                <div class="zoom-section">
+                    <label>🔍 Zoom:</label>
+                    <div class="zoom-buttons">
+                        <button onclick="zoomOut(3)">➖</button>
+                        <span class="zoom-value" id="zoom-3">100%</span>
+                        <button onclick="zoomIn(3)">➕</button>
+                        <button class="reset-btn" onclick="resetZoom(3)">↺</button>
+                    </div>
+                </div>
+                <div class="pan-section">
+                    <label>🎯 Mover Diagrama:</label>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panUp(3)">⬆️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panLeft(3)">⬅️</button>
+                        <button class="pan-btn reset-btn" onclick="resetPan(3)" style="width: 60px;">Centro</button>
+                        <button class="pan-btn" onclick="panRight(3)">➡️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panDown(3)">⬇️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mermaid zoom-1" id="mermaid-3">
+graph TB
+    subgraph Documents["📄 SISTEMA DE DOCUMENTOS"]
+        direction LR
+        
+        subgraph DocTypes["TIPOS DE DOCUMENTOS"]
+            DT1["📋 CHARLA_SEGURIDAD"]
+            DT2["⚠️ ATS"]
+            DT3["🎫 PERMISO_TRABAJO"]
+            DT4["⬆️ PERMISO_ALTURAS"]
+            DT5["⭕ PERMISO_ESPACIOS_CONFINADOS"]
+            DT6["🔥 PERMISO_TRABAJO_CALIENTE"]
+            DT7["⚡ PERMISO_ENERGÍAS_PELIGROSAS"]
+            DT8["✏️ PERMISO_OTRO"]
+        end
+        
+        subgraph Instances["INSTANCIAS MÚLTIPLES"]
+            IN1["📦 Documento Grupo<br/>isGroupDocument = true"]
+            IN2["📄 Instancia 1"]
+            IN3["📄 Instancia 2"]
+            IN4["📄 Instancia N"]
+        end
+    end
+    
+    subgraph Inspections["✅ INSPECCIONES"]
+        direction LR
+        
+        subgraph InspTypes["16 TIPOS"]
+            IT1["🪂 ARNES"]
+            IT2["🪢 ESLINGA"]
+            IT3["🪜 ESCALERA"]
+            IT4["🏗️ ANDAMIO"]
+            IT5["💨 MEDICION_GASES"]
+            IT6["🎯 TRIPODE"]
+            IT7["🔗 LINEA_VIDA"]
+        end
+    end
+    
+    subgraph Evidence["📸 EVIDENCIAS"]
+        EV1["📷 FOTOS"]
+        EV2["✍️ FIRMAS"]
+        EV3["📍 GPS"]
+        EV4["📎 DOCUMENTOS"]
+    end
+    
+    DT1 --> IN1
+    IN1 --> IN2
+    IN1 --> IN3
+    IN1 --> IN4
+    
+    IT1 --> EV1
+    IT2 --> EV2
+    IT3 --> EV3
+    IT4 --> EV4
+            </div>
+            </div>
+            <div class="grid-info">
+                <div class="info-card">
+                    <h4>📋 8 Tipos de Documentos</h4>
+                    <p>Charlas, ATS, Permisos (trabajo, alturas, espacios confinados, caliente, energías)</p>
+                </div>
+                <div class="info-card">
+                    <h4>✅ 16 Tipos de Inspecciones</h4>
+                    <p>Arnés, escalera, andamio, herramientas, gases, equipos, etc.</p>
+                </div>
+                <div class="info-card">
+                    <h4>📸 4 Tipos de Evidencias</h4>
+                    <p>Fotos, firmas, GPS, documentos adicionales con metadata</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DIAGRAMA 5: Notificaciones -->
+        <div class="diagram-container" id="diagram-4">
+            <h2>🔔 Sistema de Notificaciones en Tiempo Real</h2>
+            <p>WebSocket integrado con Socket.io para notificaciones instantáneas a todos los usuarios.</p>
+            <div class="zoom-controls">
+                <div class="zoom-section">
+                    <label>🔍 Zoom:</label>
+                    <div class="zoom-buttons">
+                        <button onclick="zoomOut(4)">➖</button>
+                        <span class="zoom-value" id="zoom-4">100%</span>
+                        <button onclick="zoomIn(4)">➕</button>
+                        <button class="reset-btn" onclick="resetZoom(4)">↺</button>
+                    </div>
+                </div>
+                <div class="pan-section">
+                    <label>🎯 Mover Diagrama:</label>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panUp(4)">⬆️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panLeft(4)">⬅️</button>
+                        <button class="pan-btn reset-btn" onclick="resetPan(4)" style="width: 60px;">Centro</button>
+                        <button class="pan-btn" onclick="panRight(4)">➡️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panDown(4)">⬇️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mermaid zoom-1" id="mermaid-4">
+graph TB
+    subgraph RealTime["🔔 NOTIFICACIONES EN TIEMPO REAL"]
+        direction LR
+        
+        subgraph WebSocketArch["ARQUITECTURA WebSocket"]
+            WS1["Socket.io Server<br/>Node.js + HTTP"]
+            WS2["Transporte Dual<br/>WebSocket + Polling"]
+        end
+        
+        subgraph RoomSystem["SALAS"]
+            RS1["Sala Individual<br/>user:{userId}"]
+            RS2["Sala Admins<br/>admins"]
+        end
+        
+        subgraph EventTypes["EVENTOS"]
+            ET1["📨 SERVICE_REQUESTED"]
+            ET2["👥 SERVICE_ASSIGNED"]
+            ET3["⏳ SERVICE_IN_PROGRESS"]
+            ET4["📄 DOCUMENT_UPLOADED"]
+            ET5["✅ INSPECTION_COMPLETED"]
+        end
+        
+        subgraph Flow["FLUJO"]
+            NF1["Evento en API"]
+            NF2["Crear en BD"]
+            NF3["Emitir Socket"]
+            NF4["Cliente recibe"]
+            NF5["UI actualiza"]
+        end
+    end
+    
+    WS1 --> WS2
+    WS2 --> RS1
+    WS2 --> RS2
+    
+    ET1 --> NF1
+    ET2 --> NF1
+    ET3 --> NF1
+    ET4 --> NF1
+    ET5 --> NF1
+    
+    NF1 --> NF2
+    NF2 --> NF3
+    NF3 --> NF4
+    NF4 --> NF5
+            </div>
+            </div>
+            <div class="info-box">
+                <strong>⚡ Características:</strong> Notificaciones en tiempo real sin refresh, audio alerts, persistencia en BD, historial completo
+            </div>
+        </div>
+        
+        <!-- DIAGRAMA 6: Frontend -->
+        <div class="diagram-container" id="diagram-5">
+            <h2>🖥️ Arquitectura de Frontend</h2>
+            <p>Estructura de componentes React organizados por rol del usuario.</p>
+            <div class="zoom-controls">
+                <div class="zoom-section">
+                    <label>🔍 Zoom:</label>
+                    <div class="zoom-buttons">
+                        <button onclick="zoomOut(5)">➖</button>
+                        <span class="zoom-value" id="zoom-5">100%</span>
+                        <button onclick="zoomIn(5)">➕</button>
+                        <button class="reset-btn" onclick="resetZoom(5)">↺</button>
+                    </div>
+                </div>
+                <div class="pan-section">
+                    <label>🎯 Mover Diagrama:</label>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panUp(5)">⬆️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panLeft(5)">⬅️</button>
+                        <button class="pan-btn reset-btn" onclick="resetPan(5)" style="width: 60px;">Centro</button>
+                        <button class="pan-btn" onclick="panRight(5)">➡️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panDown(5)">⬇️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mermaid zoom-1" id="mermaid-5">
+graph TB
+    subgraph Frontend["🖥️ FRONTEND - REACT 19"]
+        subgraph Layouts["LAYOUTS"]
+            L1["RootLayout"]
+            L2["DashboardLayout"]
+            L3["AdminLayout"]
+            L4["ClientLayout"]
+            L5["EmployeeLayout"]
+        end
+        
+        subgraph Pages["PAGES - APP ROUTER"]
+            P1["Login"]
+            P2["Dashboard Admin"]
+            P3["Dashboard Client"]
+            P4["Dashboard Employee"]
+        end
+        
+        subgraph Components["50+ COMPONENTES"]
+            SC["Shared Components"]
+            AC["Admin Components"]
+            CC["Client Components"]
+            EC["Employee Components"]
+        end
+        
+        subgraph State["STATE MANAGEMENT"]
+            S1["React Hooks"]
+            S2["NextAuth JWT"]
+            S3["Socket.io Real-time"]
+        end
+    end
+    
+    L1 --> L2
+    L1 --> L3
+    L1 --> L4
+    L1 --> L5
+    
+    L3 --> P2
+    L4 --> P3
+    L5 --> P4
+    
+    P2 --> AC
+    P3 --> CC
+    P4 --> EC
+    
+    L1 --> S1
+    L1 --> S2
+    L1 --> S3
+            </div>
+            </div>
+            <div class="grid-info">
+                <div class="info-card">
+                    <h4>📦 50+ Componentes</h4>
+                    <p>Componentes compartidos, específicos por rol, reutilizables</p>
+                </div>
+                <div class="info-card">
+                    <h4>🎨 Styling</h4>
+                    <p>Tailwind CSS, Framer Motion, Global CSS personalizado</p>
+                </div>
+                <div class="info-card">
+                    <h4>🎣 Custom Hooks</h4>
+                    <p>useAuth, useNotifications, useService, useForm, useLocalStorage</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DIAGRAMA 7: Full-Stack -->
+        <div class="diagram-container" id="diagram-6">
+            <h2>📊 Arquitectura Completa Full-Stack</h2>
+            <p>Vista general de todas las capas: frontend, backend, base de datos e infraestructura.</p>
+            <div class="zoom-controls">
+                <div class="zoom-section">
+                    <label>🔍 Zoom:</label>
+                    <div class="zoom-buttons">
+                        <button onclick="zoomOut(6)">➖</button>
+                        <span class="zoom-value" id="zoom-6">100%</span>
+                        <button onclick="zoomIn(6)">➕</button>
+                        <button class="reset-btn" onclick="resetZoom(6)">↺</button>
+                    </div>
+                </div>
+                <div class="pan-section">
+                    <label>🎯 Mover Diagrama:</label>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panUp(6)">⬆️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panLeft(6)">⬅️</button>
+                        <button class="pan-btn reset-btn" onclick="resetPan(6)" style="width: 60px;">Centro</button>
+                        <button class="pan-btn" onclick="panRight(6)">➡️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panDown(6)">⬇️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mermaid zoom-1" id="mermaid-6">
+graph TB
+    CB["🌐 Navegador"]
+    
+    subgraph Frontend["🖥️ FRONTEND"]
+        FE1["Next.js App Router"]
+        FE2["React 19 Components"]
+        FE3["State Management"]
+    end
+    
+    subgraph Network["🌍 NETWORK"]
+        NET1["HTTPS/WSS"]
+        NET2["REST API"]
+        NET3["WebSocket"]
+    end
+    
+    subgraph Backend["⚙️ BACKEND"]
+        BE1["API Routes"]
+        BE2["Route Handlers"]
+        BE3["Middleware Auth"]
+    end
+    
+    subgraph Services["🔧 SERVICES"]
+        SV1["HTTP Server"]
+        SV2["Socket.io WS"]
+        SV3["Business Logic"]
+        SV4["File Storage"]
+    end
+    
+    subgraph Database["💾 DATABASE"]
+        DB["PostgreSQL"]
+        ORM["Prisma ORM"]
+        Tables["9 Tablas"]
+    end
+    
+    subgraph Deployment["🚀 DEPLOYMENT"]
+        DEP1["Docker"]
+        DEP2["Env Variables"]
+        DEP3["Build Process"]
+        DEP4["Production"]
+    end
+    
+    CB -->|HTTP/WS| FE1
+    FE1 --> FE2
+    FE2 --> FE3
+    
+    FE3 -->|HTTPS| NET1
+    FE3 -->|JSON| NET2
+    FE3 -->|WSS| NET3
+    
+    NET1 --> BE1
+    NET2 --> BE2
+    NET3 --> SV2
+    
+    BE1 --> BE3
+    BE2 --> BE3
+    BE3 --> SV1
+    
+    SV1 --> SV3
+    SV2 --> SV3
+    SV3 --> SV4
+    
+    SV1 --> ORM
+    SV2 --> ORM
+    SV3 --> ORM
+    
+    ORM --> DB
+    ORM --> Tables
+    
+    SV1 --> DEP1
+    DEP1 --> DEP2
+    DEP2 --> DEP3
+    DEP3 --> DEP4
+            </div>
+        </div>
+        
+        <!-- DIAGRAMA 8: Casos de Uso -->
+        <div class="diagram-container" id="diagram-7">
+            <h2>📋 10 Casos de Uso Principales</h2>
+            <p>Escenarios reales implementados en la aplicación con flujos detallados.</p>
+            <div class="zoom-controls">
+                <div class="zoom-section">
+                    <label>🔍 Zoom:</label>
+                    <div class="zoom-buttons">
+                        <button onclick="zoomOut(7)">➖</button>
+                        <span class="zoom-value" id="zoom-7">100%</span>
+                        <button onclick="zoomIn(7)">➕</button>
+                        <button class="reset-btn" onclick="resetZoom(7)">↺</button>
+                    </div>
+                </div>
+                <div class="pan-section">
+                    <label>🎯 Mover Diagrama:</label>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panUp(7)">⬆️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panLeft(7)">⬅️</button>
+                        <button class="pan-btn reset-btn" onclick="resetPan(7)" style="width: 60px;">Centro</button>
+                        <button class="pan-btn" onclick="panRight(7)">➡️</button>
+                    </div>
+                    <div class="pan-row">
+                        <button class="pan-btn" onclick="panDown(7)">⬇️</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mermaid zoom-1" id="mermaid-7">
+graph TB
+    subgraph UseCases["CASOS DE USO IMPLEMENTADOS"]
+        
+        UC1["1️⃣ SOLICITUD DE SERVICIO"]
+        UC2["2️⃣ ASIGNACIÓN DE EMPLEADOS"]
+        UC3["3️⃣ EJECUCIÓN DE SERVICIO"]
+        UC4["4️⃣ GENERACIÓN DE DOCUMENTOS"]
+        UC5["5️⃣ INSPECCIONES Y CHECKLISTS"]
+        UC6["6️⃣ NOTIFICACIONES REAL-TIME"]
+        UC7["7️⃣ DESCARGA DE REPORTES"]
+        UC8["8️⃣ INSTANCIAS MÚLTIPLES"]
+        UC9["9️⃣ AUDITORÍA Y LOGS"]
+        UC10["🔟 CONFIGURACIÓN DINÁMICA"]
+        
+    end
+    
+    UC1 -->|Cliente| UC2
+    UC2 -->|Admin| UC3
+    UC3 -->|Empleado| UC4
+    UC4 --> UC5
+    UC5 --> UC6
+    UC6 -->|Socket.io| UC7
+    UC4 -->|Documento Padre| UC8
+    UC3 -->|Sistema| UC9
+    UC2 -->|Admin configura| UC10
+            </div>
+            </div>
+            <div class="info-box">
+                <strong>🎯 Nota:</strong> Cada caso de uso está completamente implementado y funcional en la aplicación.
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>SST Services © 2026 | Generado el 5 de febrero de 2026</p>
+        <p>Visualización interactiva de diagramas Mermaid</p>
+    </footer>
+    
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.contentLoaded();
+        
+        // Niveles de zoom más profundos (hasta 4x = 400%)
+        const zoomLevels = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 4];
+        const currentZoom = [0, 0, 0, 0, 0, 0, 0, 0]; // Un nivel de zoom por diagrama
+        const panOffsets = [
+            {x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0},
+            {x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0}
+        ]; // Offsets de pan por diagrama
+        
+        const PAN_STEP = 50; // Píxeles a mover por click
+        
+        function zoomIn(diagramIndex) {
+            if (currentZoom[diagramIndex] < zoomLevels.length - 1) {
+                currentZoom[diagramIndex]++;
+                updateZoom(diagramIndex);
+            }
+        }
+        
+        function zoomOut(diagramIndex) {
+            if (currentZoom[diagramIndex] > 0) {
+                currentZoom[diagramIndex]--;
+                updateZoom(diagramIndex);
+            }
+        }
+        
+        function resetZoom(diagramIndex) {
+            currentZoom[diagramIndex] = 0;
+            updateZoom(diagramIndex);
+        }
+        
+        function panUp(diagramIndex) {
+            panOffsets[diagramIndex].y += PAN_STEP;
+            updateZoom(diagramIndex);
+        }
+        
+        function panDown(diagramIndex) {
+            panOffsets[diagramIndex].y -= PAN_STEP;
+            updateZoom(diagramIndex);
+        }
+        
+        function panLeft(diagramIndex) {
+            panOffsets[diagramIndex].x += PAN_STEP;
+            updateZoom(diagramIndex);
+        }
+        
+        function panRight(diagramIndex) {
+            panOffsets[diagramIndex].x -= PAN_STEP;
+            updateZoom(diagramIndex);
+        }
+        
+        function resetPan(diagramIndex) {
+            panOffsets[diagramIndex] = {x: 0, y: 0};
+            updateZoom(diagramIndex);
+        }
+        
+        function updateZoom(diagramIndex) {
+            const mermaidElement = document.getElementById(`mermaid-${diagramIndex}`);
+            const zoomValueElement = document.getElementById(`zoom-${diagramIndex}`);
+            
+            if (mermaidElement) {
+                // Remover todas las clases de zoom
+                mermaidElement.classList.remove(
+                    'zoom-1', 'zoom-1-25', 'zoom-1-5', 'zoom-1-75', 'zoom-2',
+                    'zoom-2-25', 'zoom-2-5', 'zoom-2-75', 'zoom-3',
+                    'zoom-3-25', 'zoom-3-5', 'zoom-4'
+                );
+                
+                // Agregar la nueva clase
+                const zoomLevel = zoomLevels[currentZoom[diagramIndex]];
+                const zoomClass = `zoom-${zoomLevel.toString().replace('.', '-')}`;
+                mermaidElement.classList.add(zoomClass);
+                
+                // Aplicar transform con pan
+                const panX = panOffsets[diagramIndex].x + 'px';
+                const panY = panOffsets[diagramIndex].y + 'px';
+                mermaidElement.style.setProperty('--pan-x', panX);
+                mermaidElement.style.setProperty('--pan-y', panY);
+            }
+            
+            // Actualizar el texto del porcentaje
+            if (zoomValueElement) {
+                const percentage = (zoomLevels[currentZoom[diagramIndex]] * 100).toFixed(0);
+                zoomValueElement.textContent = percentage + '%';
+            }
+        }
+        
+        function showDiagram(index) {
+            // Ocultar todos los diagramas
+            const containers = document.querySelectorAll('.diagram-container');
+            containers.forEach(container => {
+                container.classList.remove('active');
+            });
+            
+            // Desmarcar todos los botones
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Mostrar diagrama seleccionado
+            document.getElementById(`diagram-${index}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

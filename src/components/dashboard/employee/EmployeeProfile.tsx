@@ -12,6 +12,7 @@ interface User {
   phone: string | null;
   role: string;
   active: boolean;
+  profileImage?: string | null;
   createdAt: Date;
 }
 
@@ -33,6 +34,9 @@ export default function EmployeeProfile({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [profileImage, setProfileImage] = useState<string | null | undefined>(user.profileImage);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: user.name,
@@ -70,6 +74,49 @@ export default function EmployeeProfile({
     }
   };
 
+  const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload
+    setUploadingImage(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/users/upload-profile-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al subir la imagen");
+      }
+
+      setProfileImage(data.profileImage);
+      setPreviewImage(null);
+      setSuccess("Foto de perfil actualizada exitosamente");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message);
+      setPreviewImage(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Tarjeta de Perfil */}
@@ -80,8 +127,38 @@ export default function EmployeeProfile({
       >
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-3xl font-bold text-white">
-              {user.name.charAt(0).toUpperCase()}
+            <div className="relative group">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-600 to-secondary-600 flex items-center justify-center text-3xl font-bold text-white overflow-hidden">
+                {profileImage || previewImage ? (
+                  <motion.img
+                    src={previewImage || profileImage || ""}
+                    alt="Perfil"
+                    className="w-full h-full object-cover"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  />
+                ) : (
+                  user.name.charAt(0).toUpperCase()
+                )}
+              </div>
+              <label className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfileImageChange}
+                  disabled={uploadingImage}
+                  className="hidden"
+                />
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </label>
+              {uploadingImage && (
+                <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-500 border-t-transparent"></div>
+                </div>
+              )}
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white mb-1">

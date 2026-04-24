@@ -13,6 +13,7 @@ interface Employee {
   email: string;
   phone: string | null;
   active: boolean;
+  profileImage?: string | null;
   createdAt: string;
   _count?: {
     servicesAssigned: number;
@@ -415,13 +416,21 @@ export default function EmployeesList() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden flex-shrink-0 ${
                         employee.active
                           ? "bg-gradient-to-br from-primary-600 to-secondary-600"
                           : "bg-gradient-to-br from-gray-600 to-gray-700"
                       }`}
                     >
-                      {employee.name.charAt(0).toUpperCase()}
+                      {employee.profileImage ? (
+                        <img
+                          src={employee.profileImage}
+                          alt={employee.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        employee.name.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <div>
                       <h3 className="font-semibold text-white">

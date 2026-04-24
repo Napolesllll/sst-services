@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import ServiceDetailsModal from "@/components/dashboard/client/ServiceDetailsModal";
 
 interface Service {
   id: string;
@@ -17,6 +18,7 @@ interface Service {
   suggestedDate: string;
   createdAt: string;
   completedAt: string | null;
+  empresaPrestacionServicio: string;
   employee: {
     id: string;
     name: string;
@@ -125,6 +127,8 @@ export default function ClientOverview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isVisible, setIsVisible] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -470,8 +474,16 @@ export default function ClientOverview() {
 
                       <div className="relative z-10 flex-1 flex flex-col">
                         {/* Header con título y estado */}
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-6">
                           <div className="flex-1">
+                            <motion.p
+                              className="text-base text-white font-semibold mb-2"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 0.8 + index * 0.1 }}
+                            >
+                              Empresa donde se prestara el servicio : {service.empresaPrestacionServicio}
+                            </motion.p>
                             <motion.h3
                               className="text-lg font-semibold text-white mb-1 group-hover:text-primary-400 transition-colors line-clamp-2"
                               whileHover={{ x: 3 }}
@@ -576,7 +588,16 @@ export default function ClientOverview() {
                             whileTap={{ scale: 0.95 }}
                             className="flex-1"
                           >
-                            <Button variant="secondary" size="sm" fullWidth>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            fullWidth
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedService(service);
+                              setModalOpen(true);
+                            }}
+                          >
                               Ver detalles
                             </Button>
                           </motion.div>
@@ -624,6 +645,12 @@ export default function ClientOverview() {
           </AnimatePresence>
         </Card>
       </motion.div>
+
+      <ServiceDetailsModal
+        service={selectedService}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </motion.div>
   );
 }

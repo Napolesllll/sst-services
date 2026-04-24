@@ -20,6 +20,7 @@ export default async function ProfilePage() {
       phone: true,
       role: true,
       active: true,
+      profileImage: true,
       createdAt: true,
     },
   });

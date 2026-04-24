@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import ServiceDetailsModal from "@/components/dashboard/client/ServiceDetailsModal";
 
 interface Service {
   id: string;
@@ -19,6 +20,7 @@ interface Service {
   completedAt: string | null;
   municipio: string;
   empresaContratante: string;
+  empresaPrestacionServicio: string;
   fechaInicio: string;
   requiredDocs?: string[]; // Documentos configurados
   requiredInspections?: string[]; // Inspecciones configuradas
@@ -112,6 +114,8 @@ export default function ClientRequestsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<"date" | "status">("date");
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     fetchServices();
@@ -304,9 +308,8 @@ export default function ClientRequestsPage() {
             whileHover={{ y: -4 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setStatusFilter(stat.filter)}
-            className={`p-4 rounded-xl bg-gray-800/50 border ${
-              stat.active ? "border-primary-500" : "border-gray-700"
-            } hover:border-primary-500/50 transition-all`}
+            className={`p-4 rounded-xl bg-gray-800/50 border ${stat.active ? "border-primary-500" : "border-gray-700"
+              } hover:border-primary-500/50 transition-all`}
           >
             <div
               className={`w-10 h-10 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-2 mx-auto`}
@@ -417,6 +420,9 @@ export default function ClientRequestsPage() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
+                      <p className="text-base text-white font-semibold mb-2">
+                        Empresa donde se prestara el servicio : {service.empresaPrestacionServicio}
+                      </p>
                       <h3 className="text-lg font-semibold text-white mb-1 line-clamp-2">
                         {SERVICE_TYPES[service.serviceType]}
                       </h3>
@@ -495,7 +501,16 @@ export default function ClientRequestsPage() {
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-700">
-                    <Button variant="secondary" size="sm" fullWidth>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      fullWidth
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedService(service);
+                        setModalOpen(true);
+                      }}
+                    >
                       Ver Detalles
                     </Button>
                   </div>
@@ -505,6 +520,12 @@ export default function ClientRequestsPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ServiceDetailsModal
+        service={selectedService}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 }

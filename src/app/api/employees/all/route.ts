@@ -34,6 +34,7 @@ export async function GET(request: Request) {
                 email: true,
                 phone: true,
                 active: true,
+                profileImage: true,
                 createdAt: true,
                 _count: {
                     select: {
