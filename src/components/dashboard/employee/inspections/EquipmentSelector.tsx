@@ -26,7 +26,7 @@ const AVAILABLE_EQUIPMENT: Equipment[] = [
     name: "Arnés de Cuerpo Completo",
     icon: "🦺",
     description: "Inspección de arnés, costuras, argollas y hebillas",
-    category: "EPP Crítico",
+    category: "Equipos",
   },
   {
     id: "ESLINGA",
@@ -34,7 +34,7 @@ const AVAILABLE_EQUIPMENT: Equipment[] = [
     name: "Eslinga de Seguridad",
     icon: "🔗",
     description: "Verificación de eslinga, conectores y estado general",
-    category: "EPP Crítico",
+    category: "Equipos",
   },
   {
     id: "LINEA_VIDA",
@@ -42,7 +42,7 @@ const AVAILABLE_EQUIPMENT: Equipment[] = [
     name: "Línea de Vida Retráctil",
     icon: "➰",
     description: "Inspección de mecanismo, cable y certificaciones",
-    category: "Sistema de Protección",
+    category: "Equipos",
   },
   {
     id: "ESCALERA",
@@ -50,7 +50,7 @@ const AVAILABLE_EQUIPMENT: Equipment[] = [
     name: "Escalera",
     icon: "🪜",
     description: "Estado de peldaños, estructura y estabilidad",
-    category: "Estructura",
+    category: "Herramientas",
   },
   {
     id: "ANDAMIO",
@@ -58,7 +58,7 @@ const AVAILABLE_EQUIPMENT: Equipment[] = [
     name: "Andamio",
     icon: "🏗️",
     description: "Verificación de plataformas, barandas y arriostres",
-    category: "Estructura",
+    category: "Máquinas",
   },
   {
     id: "HERRAMIENTA_TALADRO",
@@ -66,7 +66,7 @@ const AVAILABLE_EQUIPMENT: Equipment[] = [
     name: "Taladro",
     icon: "🔧",
     description: "Inspección de cable, interruptor y accesorios",
-    category: "Herramienta Eléctrica",
+    category: "Herramientas",
   },
   {
     id: "HERRAMIENTA_PULIDORA",
@@ -74,7 +74,7 @@ const AVAILABLE_EQUIPMENT: Equipment[] = [
     name: "Pulidora/Esmeril",
     icon: "⚙️",
     description: "Estado de guarda, disco y cable de alimentación",
-    category: "Herramienta Eléctrica",
+    category: "Herramientas",
   },
   {
     id: "TRIPODE",
@@ -82,7 +82,7 @@ const AVAILABLE_EQUIPMENT: Equipment[] = [
     name: "Trípode de Rescate",
     icon: "▲",
     description: "Verificación de estabilidad, winch y capacidad",
-    category: "Equipo de Rescate",
+    category: "Equipos",
   },
 ];
 
@@ -93,10 +93,9 @@ export default function EquipmentSelector({
 }: EquipmentSelectorProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Agrupar por categoría
-  const categories = Array.from(
-    new Set(AVAILABLE_EQUIPMENT.map((e) => e.category))
-  );
+  // Categorías fijas en orden específico
+  const CATEGORIES_ORDER = ["Equipos", "Máquinas", "Herramientas"];
+  const categories = CATEGORIES_ORDER;
 
   const filteredEquipment = selectedCategory
     ? AVAILABLE_EQUIPMENT.filter((e) => e.category === selectedCategory)
