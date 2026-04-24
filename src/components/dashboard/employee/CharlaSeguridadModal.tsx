@@ -16,6 +16,7 @@ interface Asistente {
   nombre: string;
   cedula: string;
   cargo: string;
+  firma?: string;
 }
 
 export default function CharlaSeguridadModal({
@@ -29,15 +30,11 @@ export default function CharlaSeguridadModal({
 
   // Datos del formulario
   const [formData, setFormData] = useState({
-    fecha: new Date().toISOString().split("T")[0],
-    hora: new Date().toTimeString().slice(0, 5),
-    lugar: "",
-    responsable: "",
-    duracion: "30",
-    temas: [] as string[],
-    riesgosIdentificados: [] as string[],
-    medidasControl: [] as string[],
-    observaciones: "",
+    fechaCapacitacion: new Date().toISOString().split("T")[0],
+    horaInicio: new Date().toTimeString().slice(0, 5),
+    horaFinal: new Date().toTimeString().slice(0, 5),
+    tema: "",
+    objetivo: "",
   });
 
   const [asistentes, setAsistentes] = useState<Asistente[]>([]);
@@ -45,36 +42,8 @@ export default function CharlaSeguridadModal({
     nombre: "",
     cedula: "",
     cargo: "",
+    firma: "",
   });
-
-  // Temas predefinidos
-  const temasDisponibles = [
-    "Uso correcto de EPP",
-    "Trabajo en alturas",
-    "Espacios confinados",
-    "Manejo de herramientas",
-    "Orden y aseo",
-    "Prevención de caídas",
-    "Riesgos eléctricos",
-    "Manipulación de cargas",
-    "Primeros auxilios",
-    "Plan de emergencia",
-    "Señalización",
-    "Riesgos químicos",
-  ];
-
-  const riesgosComunes = [
-    "Caída de altura",
-    "Golpes y contusiones",
-    "Atrapamiento",
-    "Contacto eléctrico",
-    "Exposición a químicos",
-    "Sobreesfuerzo",
-    "Proyección de partículas",
-    "Ruido",
-    "Temperaturas extremas",
-    "Cortes y heridas",
-  ];
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -85,29 +54,12 @@ export default function CharlaSeguridadModal({
     });
   };
 
-  const toggleTema = (tema: string) => {
-    setFormData({
-      ...formData,
-      temas: formData.temas.includes(tema)
-        ? formData.temas.filter((t) => t !== tema)
-        : [...formData.temas, tema],
-    });
-  };
-
-  const toggleRiesgo = (riesgo: string) => {
-    setFormData({
-      ...formData,
-      riesgosIdentificados: formData.riesgosIdentificados.includes(riesgo)
-        ? formData.riesgosIdentificados.filter((r) => r !== riesgo)
-        : [...formData.riesgosIdentificados, riesgo],
-    });
-  };
-
   const agregarAsistente = () => {
     if (
       !nuevoAsistente.nombre ||
       !nuevoAsistente.cedula ||
-      !nuevoAsistente.cargo
+      !nuevoAsistente.cargo ||
+      !nuevoAsistente.firma
     ) {
       setError("Completa todos los campos del asistente");
       return;
@@ -125,6 +77,7 @@ export default function CharlaSeguridadModal({
       nombre: "",
       cedula: "",
       cargo: "",
+      firma: "",
     });
     setError("");
   };
@@ -133,37 +86,25 @@ export default function CharlaSeguridadModal({
     setAsistentes(asistentes.filter((a) => a.id !== id));
   };
 
-  const agregarMedidaControl = () => {
-    const medida = prompt("Ingresa la medida de control:");
-    if (medida && medida.trim()) {
-      setFormData({
-        ...formData,
-        medidasControl: [...formData.medidasControl, medida.trim()],
-      });
-    }
-  };
-
-  const eliminarMedidaControl = (index: number) => {
-    setFormData({
-      ...formData,
-      medidasControl: formData.medidasControl.filter((_, i) => i !== index),
-    });
-  };
-
   const handleSubmit = async () => {
     // Validaciones
-    if (!formData.lugar) {
-      setError("El lugar es requerido");
+    if (!formData.fechaCapacitacion) {
+      setError("La fecha de capacitación es requerida");
       return;
     }
 
-    if (!formData.responsable) {
-      setError("El responsable es requerido");
+    if (!formData.horaInicio || !formData.horaFinal) {
+      setError("Las horas de inicio y final son requeridas");
       return;
     }
 
-    if (formData.temas.length === 0) {
-      setError("Selecciona al menos un tema");
+    if (!formData.tema) {
+      setError("El tema es requerido");
+      return;
+    }
+
+    if (!formData.objetivo) {
+      setError("El objetivo es requerido");
       return;
     }
 
@@ -207,7 +148,7 @@ export default function CharlaSeguridadModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -222,7 +163,7 @@ export default function CharlaSeguridadModal({
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
+          className="relative w-full max-w-4xl my-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
         >
           {/* Header */}
           <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 z-10">
@@ -231,7 +172,7 @@ export default function CharlaSeguridadModal({
                 <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
                   🗣️ Charla de Seguridad
                 </h2>
-                <p className="text-gray-400 text-sm">Paso {step} de 3</p>
+                <p className="text-gray-400 text-sm">Paso {step} de 2</p>
               </div>
               <button
                 onClick={onClose}
@@ -256,8 +197,8 @@ export default function CharlaSeguridadModal({
             {/* Progress bar */}
             <div className="mt-4 h-2 bg-gray-800 rounded-full overflow-hidden">
               <motion.div
-                initial={{ width: "33%" }}
-                animate={{ width: `${(step / 3) * 100}%` }}
+                initial={{ width: "50%" }}
+                animate={{ width: `${(step / 2) * 100}%` }}
                 className="h-full bg-gradient-to-r from-primary-600 to-secondary-600"
               />
             </div>
@@ -273,81 +214,66 @@ export default function CharlaSeguridadModal({
                 className="space-y-6"
               >
                 <h3 className="text-lg font-semibold text-white mb-4">
-                  Información General
+                  Información de la Charla
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
                     type="date"
-                    name="fecha"
-                    label="Fecha"
-                    value={formData.fecha}
+                    name="fechaCapacitacion"
+                    label="Fecha de Capacitación"
+                    value={formData.fechaCapacitacion}
                     onChange={handleChange}
                     required
                   />
 
                   <Input
                     type="time"
-                    name="hora"
-                    label="Hora"
-                    value={formData.hora}
+                    name="horaInicio"
+                    label="Hora Inicio"
+                    value={formData.horaInicio}
                     onChange={handleChange}
                     required
                   />
 
                   <Input
-                    type="text"
-                    name="lugar"
-                    label="Lugar"
-                    placeholder="Ej: Obra Calle 123"
-                    value={formData.lugar}
-                    onChange={handleChange}
-                    required
-                  />
-
-                  <Input
-                    type="text"
-                    name="responsable"
-                    label="Responsable"
-                    placeholder="Nombre del responsable"
-                    value={formData.responsable}
-                    onChange={handleChange}
-                    required
-                  />
-
-                  <Input
-                    type="number"
-                    name="duracion"
-                    label="Duración (minutos)"
-                    value={formData.duracion}
+                    type="time"
+                    name="horaFinal"
+                    label="Hora Final"
+                    value={formData.horaFinal}
                     onChange={handleChange}
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-3">
-                    Temas Tratados *
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    Tema *
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {temasDisponibles.map((tema) => (
-                      <button
-                        key={tema}
-                        type="button"
-                        onClick={() => toggleTema(tema)}
-                        className={`p-3 rounded-lg border transition-all text-left text-sm ${
-                          formData.temas.includes(tema)
-                            ? "bg-primary-500/20 border-primary-500 text-white"
-                            : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
-                      >
-                        {tema}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {formData.temas.length} tema(s) seleccionado(s)
-                  </p>
+                  <textarea
+                    name="tema"
+                    value={formData.tema}
+                    onChange={handleChange}
+                    rows={3}
+                    placeholder="Ingresa el tema de la charla..."
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 transition-colors resize-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    Objetivo *
+                  </label>
+                  <textarea
+                    name="objetivo"
+                    value={formData.objetivo}
+                    onChange={handleChange}
+                    rows={3}
+                    placeholder="Ingresa el objetivo de la charla..."
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 transition-colors resize-none"
+                    required
+                  />
                 </div>
               </motion.div>
             )}
@@ -360,7 +286,7 @@ export default function CharlaSeguridadModal({
                 className="space-y-6"
               >
                 <h3 className="text-lg font-semibold text-white mb-4">
-                  Asistentes
+                  Agregar Asistentes
                 </h3>
 
                 {/* Formulario para agregar asistente */}
@@ -368,10 +294,10 @@ export default function CharlaSeguridadModal({
                   <h4 className="text-sm font-semibold text-white mb-3">
                     Agregar Asistente
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                     <Input
                       type="text"
-                      placeholder="Nombre completo"
+                      placeholder="Nombre"
                       value={nuevoAsistente.nombre}
                       onChange={(e) =>
                         setNuevoAsistente({
@@ -402,29 +328,24 @@ export default function CharlaSeguridadModal({
                         })
                       }
                     />
+                    <Input
+                      type="text"
+                      placeholder="Firma"
+                      value={nuevoAsistente.firma}
+                      onChange={(e) =>
+                        setNuevoAsistente({
+                          ...nuevoAsistente,
+                          firma: e.target.value,
+                        })
+                      }
+                    />
                   </div>
                   <Button
                     variant="primary"
-                    size="sm"
-                    className="mt-3"
+                    fullWidth
                     onClick={agregarAsistente}
-                    icon={
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                    }
                   >
-                    Agregar
+                    Agregar Asistente
                   </Button>
                 </div>
 
@@ -439,29 +360,29 @@ export default function CharlaSeguridadModal({
                         key={asistente.id}
                         className="p-3 bg-gray-800/50 rounded-lg border border-gray-700 flex items-center justify-between"
                       >
-                        <div className="flex-1 grid grid-cols-3 gap-4">
+                        <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <p className="text-xs text-gray-500">Nombre</p>
-                            <p className="text-sm text-white">
-                              {asistente.nombre}
-                            </p>
+                            <p className="text-white">{asistente.nombre}</p>
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Cédula</p>
-                            <p className="text-sm text-white">
-                              {asistente.cedula}
-                            </p>
+                            <p className="text-white">{asistente.cedula}</p>
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Cargo</p>
-                            <p className="text-sm text-white">
-                              {asistente.cargo}
+                            <p className="text-white">{asistente.cargo}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Firma</p>
+                            <p className="text-white">
+                              {asistente.firma ? "✓ Presente" : "-"}
                             </p>
                           </div>
                         </div>
                         <button
                           onClick={() => eliminarAsistente(asistente.id)}
-                          className="ml-4 p-2 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
+                          className="ml-4 p-2 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors flex-shrink-0"
                         >
                           <svg
                             className="w-5 h-5"
@@ -498,107 +419,12 @@ export default function CharlaSeguridadModal({
                 className="space-y-6"
               >
                 <h3 className="text-lg font-semibold text-white mb-4">
-                  Riesgos y Medidas de Control
+                  Confirmación
                 </h3>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-3">
-                    Riesgos Identificados
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {riesgosComunes.map((riesgo) => (
-                      <button
-                        key={riesgo}
-                        type="button"
-                        onClick={() => toggleRiesgo(riesgo)}
-                        className={`p-3 rounded-lg border transition-all text-left text-sm ${
-                          formData.riesgosIdentificados.includes(riesgo)
-                            ? "bg-yellow-500/20 border-yellow-500 text-white"
-                            : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
-                      >
-                        {riesgo}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-semibold text-gray-300">
-                      Medidas de Control
-                    </label>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={agregarMedidaControl}
-                      icon={
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
-                          />
-                        </svg>
-                      }
-                    >
-                      Agregar
-                    </Button>
-                  </div>
-                  {formData.medidasControl.length > 0 ? (
-                    <ul className="space-y-2">
-                      {formData.medidasControl.map((medida, index) => (
-                        <li
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700"
-                        >
-                          <span className="text-sm text-white">{medida}</span>
-                          <button
-                            onClick={() => eliminarMedidaControl(index)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      No hay medidas de control agregadas
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
-                    Observaciones
-                  </label>
-                  <textarea
-                    name="observaciones"
-                    value={formData.observaciones}
-                    onChange={handleChange}
-                    rows={4}
-                    placeholder="Observaciones adicionales..."
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 transition-colors resize-none"
-                  />
+                <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-lg">
+                  <p className="text-white text-sm">
+                    ✓ Todos los datos han sido completados correctamente
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -635,7 +461,7 @@ export default function CharlaSeguridadModal({
               >
                 Cancelar
               </Button>
-              {step < 3 ? (
+              {step < 2 ? (
                 <Button
                   variant="primary"
                   fullWidth
@@ -649,21 +475,6 @@ export default function CharlaSeguridadModal({
                   fullWidth
                   onClick={handleSubmit}
                   loading={loading}
-                  icon={
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  }
                 >
                   Guardar Charla
                 </Button>

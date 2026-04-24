@@ -239,7 +239,7 @@ export default function PermisoAlturasModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -254,7 +254,7 @@ export default function PermisoAlturasModal({
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
+          className="relative w-full max-w-4xl my-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
         >
           {/* Header */}
           <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 z-10">
@@ -390,11 +390,10 @@ export default function PermisoAlturasModal({
                         key={tipo}
                         type="button"
                         onClick={() => toggleTipoTrabajo(tipo)}
-                        className={`p-3 rounded-lg border transition-all text-sm ${
-                          formData.tipoTrabajo.includes(tipo)
+                        className={`p-3 rounded-lg border transition-all text-sm ${formData.tipoTrabajo.includes(tipo)
                             ? "bg-orange-500/20 border-orange-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         {tipo}
                       </button>
@@ -584,41 +583,39 @@ export default function PermisoAlturasModal({
                           key as keyof typeof formData.verificaciones
                         )
                       }
-                      className={`w-full p-4 rounded-lg border transition-all text-left ${
-                        formData.verificaciones[
+                      className={`w-full p-4 rounded-lg border transition-all text-left ${formData.verificaciones[
                           key as keyof typeof formData.verificaciones
                         ]
                           ? "bg-green-500/20 border-green-500 text-white"
                           : "bg-gray-800/50 border-gray-700 text-gray-300 hover:border-gray-600"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
-                            formData.verificaciones[
+                          className={`w-6 h-6 rounded border-2 flex items-center justify-center ${formData.verificaciones[
                               key as keyof typeof formData.verificaciones
                             ]
                               ? "border-green-500 bg-green-500"
                               : "border-gray-600"
-                          }`}
+                            }`}
                         >
                           {formData.verificaciones[
                             key as keyof typeof formData.verificaciones
                           ] && (
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
+                              <svg
+                                className="w-4 h-4 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={3}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
                         </div>
                         <span className="text-sm font-medium">{label}</span>
                       </div>
@@ -705,11 +702,10 @@ export default function PermisoAlturasModal({
                         key={equipo}
                         type="button"
                         onClick={() => toggleEquipo(equipo)}
-                        className={`p-3 rounded-lg border transition-all text-left text-sm ${
-                          formData.equipoProteccion.includes(equipo)
+                        className={`p-3 rounded-lg border transition-all text-left text-sm ${formData.equipoProteccion.includes(equipo)
                             ? "bg-orange-500/20 border-orange-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         {equipo}
                       </button>

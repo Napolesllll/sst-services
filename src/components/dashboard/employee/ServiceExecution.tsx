@@ -6,6 +6,7 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import ServiceDocuments from "./ServiceDocuments";
+import CriticalTasks from "./CriticalTasks";
 import ServiceInspections from "./ServiceInspections";
 import ServiceEvidence from "./ServiceEvidence";
 
@@ -115,7 +116,7 @@ export default function ServiceExecution({
 }: ServiceExecutionProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
-    "info" | "documents" | "inspections" | "evidence"
+    "info" | "documents" | "critical-tasks" | "inspections" | "evidence"
   >("info");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -197,7 +198,13 @@ export default function ServiceExecution({
       id: "documents",
       label: "Documentos",
       icon: "📄",
-      badge: service.documents.length,
+      badge: service.documents.filter(d => d.documentType === "CHARLA_SEGURIDAD" || d.documentType === "ATS").length,
+    },
+    {
+      id: "critical-tasks",
+      label: "Tareas Críticas",
+      icon: "⚠️",
+      badge: service.documents.filter(d => d.documentType && d.documentType.startsWith("PERMISO_")).length,
     },
     {
       id: "inspections",
@@ -869,6 +876,16 @@ export default function ServiceExecution({
                     documents={service.documents}
                     configuredDocs={service.requiredDocs || []}
                     configuredInspections={service.requiredInspections || []}
+                  />
+                )}
+
+                {activeTab === "critical-tasks" && (
+                  <CriticalTasks
+                    serviceId={service.id}
+                    serviceType={service.serviceType}
+                    status={service.status}
+                    documents={service.documents}
+                    configuredDocs={service.requiredDocs || []}
                   />
                 )}
 

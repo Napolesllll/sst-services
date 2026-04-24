@@ -28,6 +28,16 @@ interface NewEmployeeForm {
   confirmPassword: string;
 }
 
+interface Service {
+  id: string;
+  serviceType: string;
+  status: string;
+  description: string;
+  empresaPrestacionServicio: string;
+  municipio: string;
+  createdAt: string;
+}
+
 export default function EmployeesList() {
   const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -45,6 +55,10 @@ export default function EmployeesList() {
     null
   );
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showServicesModal, setShowServicesModal] = useState(false);
+  const [employeeServices, setEmployeeServices] = useState<Service[]>([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
   const [profileStats, setProfileStats] = useState({
     totalServices: 0,
     inProgressServices: 0,
@@ -276,6 +290,31 @@ export default function EmployeesList() {
       inProgressServices: 0,
       completedServices: 0,
     });
+  };
+
+  const openServicesModal = async () => {
+    if (!selectedEmployee) return;
+    setShowServicesModal(true);
+    setLoadingServices(true);
+
+    try {
+      const response = await fetch(
+        `/api/employees/${selectedEmployee.id}/services`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setEmployeeServices(data.services || []);
+      }
+    } catch (error) {
+      console.error("Error loading services:", error);
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
+  const closeServicesModal = () => {
+    setShowServicesModal(false);
+    setEmployeeServices([]);
   };
 
   if (loading) {
@@ -1095,11 +1134,260 @@ export default function EmployeesList() {
                   >
                     Cerrar
                   </Button>
-                  <Button variant="primary" fullWidth>
+                  <Button variant="primary" fullWidth onClick={openServicesModal}>
                     Ver Servicios Asignados
                   </Button>
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Servicios Asignados */}
+      <AnimatePresence>
+        {showServicesModal && selectedEmployee && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeServicesModal}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-3xl bg-gray-900 border border-gray-700 rounded-xl shadow-2xl max-h-[80vh] overflow-hidden flex flex-col"
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-secondary-600 p-6 z-10 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div
+                    onClick={() => {
+                      if (selectedEmployee?.profileImage) {
+                        setShowPhotoLightbox(true);
+                      }
+                    }}
+                    className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl overflow-hidden flex-shrink-0 ${
+                      selectedEmployee?.profileImage
+                        ? "cursor-pointer hover:ring-2 hover:ring-white/30"
+                        : ""
+                    } bg-white/20`}
+                  >
+                    {selectedEmployee?.profileImage ? (
+                      <img
+                        src={selectedEmployee.profileImage}
+                        alt={selectedEmployee.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      selectedEmployee?.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Servicios de {selectedEmployee?.name}
+                    </h2>
+                    <p className="text-primary-100 text-sm mt-1">
+                      Total: {employeeServices.length} servicios
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeServicesModal}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                {loadingServices ? (
+                  <div className="flex items-center justify-center py-12">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full"
+                    />
+                  </div>
+                ) : employeeServices.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg
+                      className="w-16 h-16 text-gray-500 mx-auto mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    <p className="text-gray-400">No hay servicios asignados</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {employeeServices.map((service, index) => (
+                      <motion.div
+                        key={service.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-primary-500/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-white">
+                              {service.serviceType}
+                            </h3>
+                            <p className="text-sm text-gray-400 mt-1">
+                              {service.description}
+                            </p>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ml-4 ${
+                              service.status === "COMPLETED"
+                                ? "bg-green-500/20 text-green-400 border border-green-500/50"
+                                : service.status === "IN_PROGRESS"
+                                ? "bg-purple-500/20 text-purple-400 border border-purple-500/50"
+                                : service.status === "ASSIGNED"
+                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                                : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50"
+                            }`}
+                          >
+                            {service.status}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m4-4h1m-1 4h1"
+                              />
+                            </svg>
+                            <span>{service.empresaPrestacionServicio}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                              />
+                            </svg>
+                            <span>{service.municipio}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <span>
+                              {new Date(service.createdAt).toLocaleDateString(
+                                "es-CO"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="sticky bottom-0 bg-gray-900 border-t border-gray-700 p-6">
+                <Button variant="secondary" fullWidth onClick={closeServicesModal}>
+                  Cerrar
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Lightbox de Foto del Empleado */}
+      <AnimatePresence>
+        {showPhotoLightbox && selectedEmployee?.profileImage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPhotoLightbox(false)}
+              className="absolute inset-0 bg-black/95 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-10"
+            >
+              <img
+                src={selectedEmployee.profileImage}
+                alt={selectedEmployee.name}
+                className="max-w-2xl max-h-[90vh] rounded-lg shadow-2xl"
+              />
+              <button
+                onClick={() => setShowPhotoLightbox(false)}
+                className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </motion.div>
           </div>
         )}

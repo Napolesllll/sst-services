@@ -367,7 +367,7 @@ export default function PermisoEspaciosConfinadosModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -380,7 +380,7 @@ export default function PermisoEspaciosConfinadosModal({
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
+          className="relative w-full max-w-6xl my-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
         >
           {/* Header */}
           <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 z-10">
@@ -536,11 +536,10 @@ export default function PermisoEspaciosConfinadosModal({
                         key={peligro}
                         type="button"
                         onClick={() => togglePeligro(peligro)}
-                        className={`p-3 rounded-lg border transition-all text-left text-sm ${
-                          formData.peligros.includes(peligro)
+                        className={`p-3 rounded-lg border transition-all text-left text-sm ${formData.peligros.includes(peligro)
                             ? "bg-red-500/20 border-red-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         {peligro}
                       </button>
@@ -658,11 +657,10 @@ export default function PermisoEspaciosConfinadosModal({
                     {mediciones.map((medicion) => (
                       <div
                         key={medicion.id}
-                        className={`p-4 rounded-lg border ${
-                          medicion.aceptable
+                        className={`p-4 rounded-lg border ${medicion.aceptable
                             ? "bg-green-500/10 border-green-500/30"
                             : "bg-red-500/10 border-red-500/30"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex gap-4 flex-1">
@@ -1001,7 +999,7 @@ export default function PermisoEspaciosConfinadosModal({
                           type="checkbox"
                           checked={
                             formData.verificaciones[
-                              item.key as keyof typeof formData.verificaciones
+                            item.key as keyof typeof formData.verificaciones
                             ]
                           }
                           onChange={() =>
@@ -1056,7 +1054,7 @@ export default function PermisoEspaciosConfinadosModal({
                           type="checkbox"
                           checked={
                             formData.verificaciones[
-                              item.key as keyof typeof formData.verificaciones
+                            item.key as keyof typeof formData.verificaciones
                             ]
                           }
                           onChange={() =>
@@ -1095,38 +1093,34 @@ export default function PermisoEspaciosConfinadosModal({
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div
-                      className={`p-2 rounded text-center ${
-                        formData.peligros.length > 0
+                      className={`p-2 rounded text-center ${formData.peligros.length > 0
                           ? "bg-green-500/20 text-green-400 border border-green-500/30"
                           : "bg-red-500/20 text-red-400 border border-red-500/30"
-                      }`}
+                        }`}
                     >
                       Peligros: {formData.peligros.length}
                     </div>
                     <div
-                      className={`p-2 rounded text-center ${
-                        trabajadores.length > 0
+                      className={`p-2 rounded text-center ${trabajadores.length > 0
                           ? "bg-green-500/20 text-green-400 border border-green-500/30"
                           : "bg-red-500/20 text-red-400 border border-red-500/30"
-                      }`}
+                        }`}
                     >
                       Trabajadores: {trabajadores.length}
                     </div>
                     <div
-                      className={`p-2 rounded text-center ${
-                        mediciones.length > 0
+                      className={`p-2 rounded text-center ${mediciones.length > 0
                           ? "bg-green-500/20 text-green-400 border border-green-500/30"
                           : "bg-red-500/20 text-red-400 border border-red-500/30"
-                      }`}
+                        }`}
                     >
                       Mediciones: {mediciones.length}
                     </div>
                     <div
-                      className={`p-2 rounded text-center ${
-                        Object.values(formData.verificaciones).every((v) => v)
+                      className={`p-2 rounded text-center ${Object.values(formData.verificaciones).every((v) => v)
                           ? "bg-green-500/20 text-green-400 border border-green-500/30"
                           : "bg-red-500/20 text-red-400 border border-red-500/30"
-                      }`}
+                        }`}
                     >
                       Verificaciones:{" "}
                       {

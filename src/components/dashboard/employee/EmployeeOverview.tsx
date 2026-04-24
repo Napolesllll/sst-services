@@ -120,9 +120,8 @@ const Card = ({
 
   return (
     <div
-      className={`${baseClasses} ${
-        variantClasses[variant as keyof typeof variantClasses]
-      } ${hoverClasses}`}
+      className={`${baseClasses} ${variantClasses[variant as keyof typeof variantClasses]
+        } ${hoverClasses}`}
     >
       {children}
     </div>
@@ -443,7 +442,7 @@ export default function EmployeeOverview() {
                       <div>
                         <motion.h3
                           className="text-2xl font-bold text-white mb-2"
-                          whileHover={{ color: "#60a5fa" }}
+                          whileHover={{ color: "#d3d8df" }}
                         >
                           {service.empresaContratante}
                         </motion.h3>

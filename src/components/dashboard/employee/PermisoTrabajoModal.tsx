@@ -290,7 +290,7 @@ export default function PermisoTrabajoModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -303,7 +303,7 @@ export default function PermisoTrabajoModal({
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
+          className="relative w-full max-w-5xl my-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
         >
           {/* Header */}
           <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 z-10">
@@ -564,11 +564,10 @@ export default function PermisoTrabajoModal({
                         key={riesgo}
                         type="button"
                         onClick={() => toggleRiesgo(riesgo)}
-                        className={`p-2 rounded-lg border transition-all text-sm ${
-                          formData.riesgosPresentes.includes(riesgo)
+                        className={`p-2 rounded-lg border transition-all text-sm ${formData.riesgosPresentes.includes(riesgo)
                             ? "bg-orange-500/20 border-orange-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         {riesgo}
                       </button>
@@ -611,41 +610,39 @@ export default function PermisoTrabajoModal({
                           key as keyof typeof formData.verificaciones
                         )
                       }
-                      className={`w-full p-4 rounded-lg border transition-all text-left ${
-                        formData.verificaciones[
+                      className={`w-full p-4 rounded-lg border transition-all text-left ${formData.verificaciones[
                           key as keyof typeof formData.verificaciones
                         ]
                           ? "bg-green-500/20 border-green-500 text-white"
                           : "bg-gray-800/50 border-gray-700 text-gray-300 hover:border-gray-600"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
-                            formData.verificaciones[
+                          className={`w-6 h-6 rounded border-2 flex items-center justify-center ${formData.verificaciones[
                               key as keyof typeof formData.verificaciones
                             ]
                               ? "border-green-500 bg-green-500"
                               : "border-gray-600"
-                          }`}
+                            }`}
                         >
                           {formData.verificaciones[
                             key as keyof typeof formData.verificaciones
                           ] && (
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
+                              <svg
+                                className="w-4 h-4 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={3}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
                         </div>
                         <span className="text-sm font-medium">{label}</span>
                       </div>
@@ -676,11 +673,10 @@ export default function PermisoTrabajoModal({
                         key={epp}
                         type="button"
                         onClick={() => toggleEPP(epp)}
-                        className={`p-2 rounded-lg border transition-all text-sm ${
-                          formData.eppRequerido.includes(epp)
+                        className={`p-2 rounded-lg border transition-all text-sm ${formData.eppRequerido.includes(epp)
                             ? "bg-blue-500/20 border-blue-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         {epp}
                       </button>
@@ -698,11 +694,10 @@ export default function PermisoTrabajoModal({
                         key={herramienta}
                         type="button"
                         onClick={() => toggleHerramienta(herramienta)}
-                        className={`p-2 rounded-lg border transition-all text-sm ${
-                          formData.herramientas.includes(herramienta)
+                        className={`p-2 rounded-lg border transition-all text-sm ${formData.herramientas.includes(herramienta)
                             ? "bg-cyan-500/20 border-cyan-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         {herramienta}
                       </button>

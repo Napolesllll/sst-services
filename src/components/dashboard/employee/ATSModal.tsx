@@ -312,7 +312,7 @@ export default function ATSModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -327,7 +327,7 @@ export default function ATSModal({
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
+          className="relative w-full max-w-4xl my-auto bg-gray-900 border border-gray-700 rounded-xl shadow-2xl"
         >
           {/* Header */}
           <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-6 z-10">
@@ -580,11 +580,10 @@ export default function ATSModal({
                       <button
                         key={paso.id}
                         onClick={() => setPasoActual(paso.id)}
-                        className={`p-3 rounded-lg border text-left transition-all ${
-                          pasoActual === paso.id
+                        className={`p-3 rounded-lg border text-left transition-all ${pasoActual === paso.id
                             ? "bg-primary-500/20 border-primary-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-300 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold">
@@ -630,11 +629,10 @@ export default function ATSModal({
                                   nivelRiesgo: nivel,
                                 })
                               }
-                              className={`flex-1 px-3 py-2 rounded-lg border text-sm font-semibold transition-all ${
-                                nuevoRiesgo.nivelRiesgo === nivel
+                              className={`flex-1 px-3 py-2 rounded-lg border text-sm font-semibold transition-all ${nuevoRiesgo.nivelRiesgo === nivel
                                   ? getNivelRiesgoColor(nivel)
                                   : "bg-gray-900 border-gray-700 text-gray-400"
-                              }`}
+                                }`}
                             >
                               {nivel}
                             </button>
@@ -745,11 +743,10 @@ export default function ATSModal({
                         key={epp}
                         type="button"
                         onClick={() => toggleEPP(epp)}
-                        className={`p-3 rounded-lg border transition-all text-left text-sm ${
-                          formData.eppRequerido.includes(epp)
+                        className={`p-3 rounded-lg border transition-all text-left text-sm ${formData.eppRequerido.includes(epp)
                             ? "bg-primary-500/20 border-primary-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         {epp}
                       </button>
@@ -770,11 +767,10 @@ export default function ATSModal({
                         key={herramienta}
                         type="button"
                         onClick={() => toggleHerramienta(herramienta)}
-                        className={`p-3 rounded-lg border transition-all text-left text-sm ${
-                          formData.herramientas.includes(herramienta)
+                        className={`p-3 rounded-lg border transition-all text-left text-sm ${formData.herramientas.includes(herramienta)
                             ? "bg-secondary-500/20 border-secondary-500 text-white"
                             : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                        }`}
+                          }`}
                       >
                         {herramienta}
                       </button>

@@ -117,7 +117,11 @@ export default function ServiceDocuments({
       setLoadingConfig(true);
 
       if (configuredDocs && configuredDocs.length > 0) {
-        setRequiredDocuments(configuredDocs);
+        // Filtrar solo Charla de Seguridad y ATS
+        const baseDocuments = configuredDocs.filter(
+          (doc) => doc === "CHARLA_SEGURIDAD" || doc === "ATS"
+        );
+        setRequiredDocuments(baseDocuments.length > 0 ? baseDocuments : ["CHARLA_SEGURIDAD", "ATS"]);
         return;
       }
 
@@ -127,51 +131,26 @@ export default function ServiceDocuments({
       const data = await response.json();
 
       if (response.ok) {
-        setRequiredDocuments(data.requiredDocuments || []);
+        // Filtrar solo Charla de Seguridad y ATS
+        const baseDocuments = (data.requiredDocuments || []).filter(
+          (doc: string) => doc === "CHARLA_SEGURIDAD" || doc === "ATS"
+        );
+        setRequiredDocuments(baseDocuments.length > 0 ? baseDocuments : ["CHARLA_SEGURIDAD", "ATS"]);
       } else {
         console.error("Error loading required documents:", data.error);
-        setRequiredDocuments(getDefaultRequiredDocuments(serviceType));
+        setRequiredDocuments(["CHARLA_SEGURIDAD", "ATS"]);
       }
     } catch (error) {
       console.error("Error fetching required documents:", error);
-      setRequiredDocuments(getDefaultRequiredDocuments(serviceType));
+      setRequiredDocuments(["CHARLA_SEGURIDAD", "ATS"]);
     } finally {
       setLoadingConfig(false);
     }
   };
 
   const getDefaultRequiredDocuments = (serviceType: string): string[] => {
-    const baseDocuments = ["CHARLA_SEGURIDAD", "ATS"];
-    const specificDocuments: { [key: string]: string[] } = {
-      COORDINADOR_ALTURAS: ["PERMISO_ALTURAS"],
-      SUPERVISOR_ESPACIOS_CONFINADOS: ["PERMISO_ESPACIOS_CONFINADOS"],
-      ANDAMIERO: ["PERMISO_ALTURAS"],
-      RESCATISTA: ["PERMISO_ALTURAS", "PERMISO_ESPACIOS_CONFINADOS"],
-      PROFESIONAL_SST: ["PERMISO_TRABAJO"],
-      TECNOLOGO_SST: ["PERMISO_TRABAJO"],
-      TECNICO_SST: ["PERMISO_TRABAJO"],
-      SERVICIOS_ADMINISTRATIVOS: [],
-      NOMINA: [],
-      FACTURACION: [],
-      CONTRATOS: [],
-      SEGURIDAD_SOCIAL: [],
-    };
-
-    const specific = specificDocuments[serviceType] || ["PERMISO_TRABAJO"];
-
-    if (
-      [
-        "SERVICIOS_ADMINISTRATIVOS",
-        "NOMINA",
-        "FACTURACION",
-        "CONTRATOS",
-        "SEGURIDAD_SOCIAL",
-      ].includes(serviceType)
-    ) {
-      return [];
-    }
-
-    return [...baseDocuments, ...specific];
+    // Solo retornar Charla de Seguridad y ATS
+    return ["CHARLA_SEGURIDAD", "ATS"];
   };
 
   // ========== FUNCIONES PARA INSTANCIAS ==========
